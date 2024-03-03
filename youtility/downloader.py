@@ -14,7 +14,7 @@ import threading
 
 
 class DownloaderThread(QThread):
-    finished_song = pyqtSignal(str)
+    download_finished = pyqtSignal()
 
     def __init__(self, link, quality, download_captions, copy_thumbnail_link, dwnld_list_widget, quality_menu,
                  loading_label, main_window, save_path, caption_list=None, folder_path=None):
@@ -33,6 +33,8 @@ class DownloaderThread(QThread):
 
     def run(self):
 
+        caption_file_path = os.path.join(self.save_path, "captions.xml")
+
         def get_gif():
             gifs = ["loading.gif",  "loading_2.gif"]
             gif = random.choice(gifs)
@@ -44,19 +46,21 @@ class DownloaderThread(QThread):
         youtube_client.streams.filter(file_extension=extension)
 
         self.list_item = QListWidgetItem(
-            "Downloading: " + title)  # Assuming title is fetched from youtube_client.title
+            "Downloading: " + title)
         self.download_list_widget.addItem(self.list_item)
+
         # Get available streams for the video
         streams = youtube_client.streams.filter(progressive=False)
 
         # Get the selected quality option
         choice = self.quality_menu.currentIndex()
         stream = streams[choice]
-        if not self.download_captions:
-            save_path = str(self.save_path)
-            stream.download(save_path)
+
+        # Download the video
+        stream.download(self.save_path)
 
         if self.download_captions:
+            # Download and save captions if enabled
             captions = youtube_client.captions
             language_dict = {}
             for caption in captions:
@@ -68,34 +72,18 @@ class DownloaderThread(QThread):
 
             lang_get = self.caption_list.currentText()
             lang = language_dict.get(lang_get)
-            print(lang)
-            default_folder = os.path.expanduser("~")
-            # folder_path = QFileDialog.getExistingDirectory(self.main_window, "Select Folder", default_folder)
-            caption_file_name = "captions.srt"
 
-            if self.save_path:
-                default_filename = title
-                save_path = os.path.join(self.save_path, default_filename)
+            caption_dwnld = youtube_client.captions.get_by_language_code(lang)
+            caption_dwnld = caption_dwnld.xml_captions
 
-                if not os.path.exists(self.save_path):
-                    print("Directory made")
-                    os.makedirs(self.save_path)
+            # Save the caption file in the same directory as the video
+            with open(caption_file_path, 'w', encoding="utf-8") as file:
+                file.write(caption_dwnld)
 
-                stream.download(save_path)
-                caption_dwnld = youtube_client.captions.get_by_language_code(lang)
-                print(caption_dwnld)
-                caption_dwnld = caption_dwnld.generate_srt_captions()
-                print(caption_dwnld)
-
-                # Save the caption file in the same directory as the video
-                caption_file_path = os.path.join(self.save_path, caption_file_name)
-                with open(caption_file_path, 'w') as file:
-                    file.write(caption_dwnld)
-
+        self.download_finished.emit()
         self.movie = QMovie(get_gif())
         self.loading_label.setMovie(self.movie)
         self.movie.start()
-
 
 class YoutubeVideo(QWidget):
     def __init__(self):
@@ -250,7 +238,7 @@ class YoutubeVideo(QWidget):
             title = "Untitled"
 
         # Open file dialog to get save path
-        save_path, _ = QFileDialog.getSaveFileName(self, "Save file", title,  "Video Files (*.mp4)")
+        save_path, _ = QFileDialog.getSaveFileName(self, "Save file", title)
 
         self.downloader_thread = DownloaderThread(
             link=link,
@@ -264,11 +252,8 @@ class YoutubeVideo(QWidget):
             main_window=self,
             caption_list=self.caption_list
         )
-
-        self.downloader_thread.finished_song.connect(self.finish_download)
+        self.downloader_thread.download_finished.connect(self.show_download_finished_message)
         self.downloader_thread.start()
 
-    def finish_download(self):
-        print("done")
-        self.loading_label.hide()
-        print("DONE")
+    def show_download_finished_message(self):
+        print("lol")
