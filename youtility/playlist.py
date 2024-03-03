@@ -1,5 +1,6 @@
 import os
 import random
+import re
 
 import pytube.exceptions
 from PyQt6.QtCore import Qt, QThread, pyqtSignal
@@ -7,8 +8,8 @@ from PyQt6.QtGui import QMovie
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QGroupBox, QPushButton, QComboBox, QFileDialog, QHBoxLayout, \
     QSpacerItem, QLabel, QListWidgetItem
 from qfluentwidgets import (LineEdit,
-                            StrongBodyLabel, MessageBox, CheckBox, ListWidget)
-from pytube import YouTube
+                            StrongBodyLabel, MessageBox, CheckBox, ListWidget, TextEdit)
+from pytube import Playlist
 from consts import msgs, extension
 import threading
 
@@ -16,85 +17,91 @@ import threading
 class DownloaderThread(QThread):
     download_finished = pyqtSignal()
 
-    def __init__(self, link, quality, download_captions, copy_thumbnail_link, dwnld_list_widget, quality_menu,
-                 loading_label, main_window, save_path, caption_list=None, folder_path=None):
+    def __init__(self, link, quality, copy_thumbnail_link, dwnld_list_widget, quality_menu,
+                 loading_label, main_window, save_path, progress_text, folder_path=None):
         super().__init__()
         self.link = link
         self.quality = quality
-        self.download_captions = download_captions
         self.copy_thumbnail_link = copy_thumbnail_link
-        self.caption_list = caption_list
         self.download_list_widget = dwnld_list_widget
         self.quality_menu = quality_menu
         self.loading_label = loading_label
         self.folder_path = folder_path
         self.save_path = save_path
+        self.progress_textbox = progress_text
         self.main_window = main_window
 
     def run(self):
-
         def get_gif():
             gifs = ["loading.gif", "loading_2.gif"]
             gif = random.choice(gifs)
             gif_path = "resource/misc/" + gif
             return gif_path
 
-        caption_file_path = os.path.join(self.save_path, "captions.xml")
 
         self.loading_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.loading_movie = QMovie(get_gif())
         self.loading_label.setMovie(self.loading_movie)
 
-        youtube_client = YouTube(self.link)
-        title = youtube_client.title
-        youtube_client.streams.filter(file_extension=extension)
+        # loading_animation()
+
+        playlist = Playlist(self.link)
+        playlist._video_regex = re.compile(r"\"url\":\"(/watch\?v=[\w-]*)")
+        title = playlist.title
+        # playlist.streams.filter(file_extension=extension)
         self.list_item = QListWidgetItem(
             "Downloading: " + title)
         self.download_list_widget.addItem(self.list_item)
 
-        # Get available streams for the video
-        streams = youtube_client.streams.filter(progressive=False)
-
         # Get the selected quality option
         choice = self.quality_menu.currentIndex()
-        stream = streams[choice]
 
-        # Download the video
-        stream.download(self.save_path)
+        # print(len(playlist.video_urls))
+        for video in playlist.videos:
+            self.progress_textbox.append('Downloading: {} with URL: {}'.format(video.title, video.watch_url))
+            self.progress_textbox.append("\n")
 
-        if self.download_captions:
-            # Download and save captions if enabled
-            captions = youtube_client.captions
-            language_dict = {}
-            for caption in captions:
-                language_name = caption.name.split(" - ")[0]  # Extracting the main language name
-                language_code = caption.code.split(".")[0]  # Extracting the main language code
+            filtered_streams = video.streams.filter(type='video', progressive=False, file_extension='mp4')
 
-                if language_name not in language_dict:
-                    language_dict[language_name] = language_code
+            selected_stream = filtered_streams.filter(resolution=self.quality).first()
 
-            lang_get = self.caption_list.currentText()
-            lang = language_dict.get(lang_get)
+            selected_stream.download(output_path=self.save_path)
 
-            caption_dwnld = youtube_client.captions.get_by_language_code(lang)
-            caption_dwnld = caption_dwnld.xml_captions
+            self.progress_textbox.append('Downloaded: {}'.format(video.title))
 
-            # Save the caption file in the same directory as the video
-            with open(caption_file_path, 'w', encoding="utf-8") as file:
-                file.write(caption_dwnld)
+        # if self.download_captions:
+        #    for video in playlist.videos:
+        #        # Download and save captions if enabled
+        #        captions = video.captions
+        #        language_dict = {}
+        #        for caption in captions:
+        #           language_name = caption.name.split(" - ")[0]  # Extracting the main language name
+        #          language_code = caption.code.split(".")[0]  # Extracting the main language code
+        #
+        #                   if language_name not in language_dict:
+        #                      language_dict[language_name] = language_code
+        #
+        #              lang = language_dict.get(lang_get)
+        #
+        #               caption_dwnld = video.captions.get_by_language_code(lang)
+        #              caption_dwnld = caption_dwnld.xml_captions
+        #
+        #               # Save the caption file in the same directory as the video
+        #              with open(caption_file_path, 'w', encoding="utf-8") as file:
+        #                 file.write(caption_dwnld)
 
         self.download_finished.emit()
         self.list_item.setText((title + " - Downloaded"))
 
 
-class YoutubeVideo(QWidget):
+class YoutubePlaylist(QWidget):
     def __init__(self):
         super().__init__()
 
         spacer_item_small = QSpacerItem(0, 10)
         spacer_item_medium = QSpacerItem(0, 20)
 
-        self.setObjectName("Video")
+        self.setObjectName("Playlist")
 
         self.main_layout = QVBoxLayout()
         self.main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
@@ -105,7 +112,7 @@ class YoutubeVideo(QWidget):
         self.link_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
         self.link_entry = LineEdit(self)
         self.link_entry.textChanged.connect(self.get_quality)
-        self.link_entry.setPlaceholderText("Enter YouTube Video Link: ")
+        self.link_entry.setPlaceholderText("Enter YouTube Playlist Link: ")
         self.link_layout.addWidget(self.link_entry)
 
         self.main_layout.addSpacerItem(spacer_item_small)
@@ -116,17 +123,14 @@ class YoutubeVideo(QWidget):
         self.main_layout.addLayout(self.quality_layout)
         self.main_layout.addLayout(self.options_layout)
         self.quality_menu = QComboBox()
-        self.quality_menu.setPlaceholderText("Video Quality (Enter link to view)")
-        # self.quality_menu.addItems(["2160p", "1440p", "1080p", "720p", "480p", "360p", "240p", "144p"])
+        self.quality_menu.setPlaceholderText("Video Quality (Applies to all videos)")
+        self.quality_menu.addItems(["1080p", "720p", "480p", "360p", "240p", "144p"])
         self.quality_layout.addWidget(self.quality_menu)
         self.options_layout.addSpacerItem(spacer_item_medium)
-        self.thumbnail_url_checkbox = CheckBox('Copy Thumbnail Link', self)
-        self.captions_checkbox = CheckBox('Download Captions', self)
-        self.captions_checkbox.stateChanged.connect(self.trigger_captions_list)
+        self.thumbnail_url_checkbox = CheckBox('Copy Thumbnail URL', self)
 
         self.options_group = QGroupBox("Additional Options")
         self.options_group_layout = QVBoxLayout(self.options_group)
-        self.options_group_layout.addWidget(self.captions_checkbox)
         self.options_group_layout.addWidget(self.thumbnail_url_checkbox)
         self.options_layout.addWidget(self.options_group)
 
@@ -154,7 +158,9 @@ class YoutubeVideo(QWidget):
         self.count_layout = QHBoxLayout()
         # Create a QListWidget to display downloading status
         self.download_list_widget = ListWidget()
+        self.download_list_text = TextEdit()
         self.count_layout.addWidget(self.download_list_widget)
+        self.count_layout.addWidget(self.download_list_text)
         self.main_layout.addLayout(self.count_layout)
 
         self.setLayout(self.main_layout)
@@ -174,53 +180,6 @@ class YoutubeVideo(QWidget):
         except pytube.exceptions.RegexMatchError:
             pass
 
-    def trigger_captions_list(self):
-        if self.captions_checkbox.isChecked():
-            link = self.link_entry.text()
-            if link == "":
-                msg = random.choice(msgs)
-                w = MessageBox(
-                    'No URL Found',
-                    msg,
-                    self
-                )
-                self.captions_checkbox.setChecked(False)
-                w.yesButton.setText('Alright Genius 🤓')
-                w.cancelButton.setText('Yeah let me try again 🤝')
-
-                if w.exec():
-                    pass
-
-            else:
-                try:
-                    youtube_client = YouTube(link)
-                    captions = youtube_client.captions
-                    language_names = []
-                    language_dict = {}
-
-                    for caption in captions:
-                        language_name = caption.name.split(" - ")[0]  # Extracting the main language name
-                        language_code = caption.code.split(".")[0]  # Extracting the main language code
-
-                        if language_name not in language_dict:
-                            language_dict[language_name] = language_code
-
-                        if language_name not in language_names:
-                            language_names.append(language_name)
-
-                    self.caption_label = StrongBodyLabel('Caption Language', self)
-                    self.captions_layout.addWidget(self.caption_label)
-                    self.caption_list = QComboBox()
-                    self.caption_list.addItems(language_names)
-                    self.captions_layout.addWidget(self.caption_list)
-
-                except pytube.exceptions.RegexMatchError:
-                    pass
-
-        else:
-            self.caption_list.hide()
-            self.caption_label.hide()
-
     def download(self):
         def get_gif():
             gifs = ["loading.gif", "loading_2.gif"]
@@ -230,11 +189,10 @@ class YoutubeVideo(QWidget):
 
         link = self.link_entry.text()
         quality = self.quality_menu.currentText()
-        download_captions = self.captions_checkbox.isChecked()
         copy_thumbnail_link = self.thumbnail_url_checkbox.isChecked()
         title = ""
         try:
-            yt = YouTube(link)
+            yt = Playlist(link)
             title = yt.title
         except pytube.exceptions.RegexMatchError:
             title = "Untitled"
@@ -245,14 +203,13 @@ class YoutubeVideo(QWidget):
         self.downloader_thread = DownloaderThread(
             link=link,
             quality=quality,
-            download_captions=download_captions,
             copy_thumbnail_link=copy_thumbnail_link,
             save_path=save_path,  # Pass the save path here
             loading_label=self.loading_label,
             dwnld_list_widget=self.download_list_widget,
             quality_menu=self.quality_menu,
             main_window=self,
-            caption_list=self.caption_list
+            progress_text=self.download_list_text
         )
         self.downloader_thread.download_finished.connect(self.show_download_finished_message)
         self.downloader_thread.start()

@@ -12,6 +12,7 @@ from qfluentwidgets import FluentIcon as FIF
 from qframelesswindow import FramelessWindow, TitleBar
 from downloader import YoutubeVideo
 from settings import SettingsPage
+from playlist import YoutubePlaylist
 
 
 class StackedWidget(QFrame):
@@ -112,7 +113,8 @@ class Window(FramelessWindow):
         self.stackWidget = StackedWidget(self)
 
         # create sub interface
-        self.uiInterface = YoutubeVideo()
+        self.videoInterface = YoutubeVideo()
+        self.playlistInterface = YoutubePlaylist()
         self.settingsInterface = SettingsPage()
         # self.artistInterface = artist.Artist(self)
         # self.libraryInterface = Widget('library Interface', self)
@@ -133,7 +135,8 @@ class Window(FramelessWindow):
         self.hBoxLayout.setStretchFactor(self.stackWidget, 1)
 
     def initNavigation(self):
-        self.addSubInterface(self.uiInterface, FIF.VIDEO, 'Video', selectedIcon=FIF.VIDEO)
+        self.addSubInterface(self.videoInterface, FIF.VIDEO, 'Video', selectedIcon=FIF.VIDEO)
+        self.addSubInterface(self.playlistInterface, FIF.FOLDER, 'Playlist', selectedIcon=FIF.FOLDER)
         self.addSubInterface(self.settingsInterface, FIF.SETTING, 'Settings', NavigationItemPosition.BOTTOM,
                              FIF.SETTING)
         self.navigationBar.addItem(
@@ -146,7 +149,7 @@ class Window(FramelessWindow):
         )
 
         self.stackWidget.currentChanged.connect(self.onCurrentInterfaceChanged)
-        self.navigationBar.setCurrentItem(self.uiInterface.objectName())
+        self.navigationBar.setCurrentItem(self.videoInterface.objectName())
 
     def initWindow(self):
         self.resize(1000, 600)
@@ -170,7 +173,7 @@ class Window(FramelessWindow):
         color = 'dark' if isDarkTheme() else 'light'
         with open(f'resource/{color}/demo.qss', encoding='utf-8') as f:
             self.setStyleSheet(f.read())
- 
+
     def switchTo(self, widget):
         self.stackWidget.setCurrentWidget(widget)
 
