@@ -31,6 +31,14 @@ Youtility helps you to download YouTube content locally. With Youtility, you can
 
 ## 👒 Getting Started
 
+### Download EXE
+- Head over to [Releases](https://github.com/rohankishore/Youtility/releases)
+- Download `Youtility_vX.zip` file (where X is the current latest version)
+- Unzip the file
+- Run `main.exe`
+
+### Run Manually via Python 
+
 ```bash
 pip install -r requirements.txt
 ```
@@ -44,7 +52,7 @@ python -m main.py
 
 ## Show Support
 
-Hey! First of all, thank you for considering to support me. You can support me by Buying me a Coffee via Ko-Fi. You can either [Click Here](https://ko-fi.com/rohankishore) or click the button "Buy Me A Coffee" on top of this page or via the GitHub Sponsor button. Thanks a lot :)
+Hey! First of all, thank you for considering supporting me. You can support me by Buying me a Coffee via Ko-Fi. You can either [Click Here](https://ko-fi.com/rohankishore) or click the button "Buy Me A Coffee" on top of this page or via the GitHub Sponsor button. Thanks a lot :)
 
 <br>
 
