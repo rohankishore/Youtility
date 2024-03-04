@@ -148,6 +148,7 @@ class YoutubePlaylist(QWidget):
         # Create a QListWidget to display downloading status
         self.download_list_widget = ListWidget()
         self.download_list_text = TextEdit()
+        self.download_list_text.setReadOnly(True)
         self.count_layout.addWidget(self.download_list_widget)
         self.count_layout.addWidget(self.download_list_text)
         self.main_layout.addLayout(self.count_layout)
