@@ -22,7 +22,7 @@ Youtility helps you to download YouTube content locally. With Youtility, you can
 
 ## 🧩 Interface
 
-![image](https://github.com/rohankishore/Youtility/assets/109947257/6119aa64-c18f-4ef8-b82f-d8e6ffb711d0)
+![image](https://github.com/rohankishore/Youtility/assets/109947257/04b5fb62-add8-4456-90d4-358f530b17cd)
 
 ![image](https://github.com/rohankishore/Youtility/assets/109947257/009b66c2-20b5-46e4-8baf-9d6eb0f26a68)
 
