@@ -20,7 +20,7 @@ Youtility helps you to download YouTube content locally. With Youtility, you can
 - Video to Mp3
   
 
-## Interface
+## 🧩 Interface
 
 ![image](https://github.com/rohankishore/Youtility/assets/109947257/6119aa64-c18f-4ef8-b82f-d8e6ffb711d0)
 
@@ -49,7 +49,7 @@ python -m main.py
 <br>
 
 
-## Show Support
+## 🤝 Show Support
 
 Hey! First of all, thank you for considering supporting me. You can support me by Buying me a Coffee via Ko-Fi. You can either [Click Here](https://ko-fi.com/rohankishore) or click the button "Buy Me A Coffee" on top of this page or via the GitHub Sponsor button. Thanks a lot :)
 
@@ -62,7 +62,7 @@ This project was made possible just because of [PyTube](https://github.com/pytub
 <br>
 
 
-### I hope you'll enjoy using Youtility as much as I enjoyed while making it. Thanks a lot!
+### I hope you'll enjoy using Youtility as much as I enjoyed while making it. Thanks a lot 💖
 
 
 ```
