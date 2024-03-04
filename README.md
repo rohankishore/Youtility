@@ -19,7 +19,6 @@ Youtility helps you to download YouTube content locally. With Youtility, you can
 - Playlists (also as audio-only files)
 - Video to Mp3
   
-<br>
 
 ## Interface
 
