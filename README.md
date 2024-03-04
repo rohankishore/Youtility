@@ -3,7 +3,7 @@
 ![Group 3 (1)](https://github.com/rohankishore/Youtility/assets/109947257/8ec73f10-0bed-4dbc-8201-269db2adaddc)
 
 # Youtility
-YouTube video and playlist downloader made with PyQt6 and PyTube. In simple terms, Youtility is like a GUI for PyTube. [Download Now](https://github.com/rohankishore/Youtility/releases)
+YouTube video and playlist downloader made with PyQt6 and PyTube. [Download Now](https://github.com/rohankishore/Youtility/releases)
 
 </div>
 
@@ -14,7 +14,17 @@ YouTube video and playlist downloader made with PyQt6 and PyTube. In simple term
 </div>
 
 ## 📺 What is Youtility?
-Youtility helps you to download YouTube content locally. With Youtility, you can download:
+> "Hey, are you lonely?"
+
+<br>
+
+> "Hot Milfs 5kms near you"
+
+<br>
+
+If you've ever tried to download YouTube videos online, I'm pretty sure that you're familiar with the above messages. Well, your savior(me lol) is here. Meet Youtility, a YouTube downloader with NO ads or bloats, and open source :). With Youtility, say goodbye to enduring those pesky, dodgy ads while downloading YouTube videos. It's your ticket to hassle-free downloads without the BS of intrusive advertisements. 
+
+**You can download**
 - Single videos with captions file
 - Playlists (also as audio-only files)
 - Video to Mp3
