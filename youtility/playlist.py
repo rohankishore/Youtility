@@ -17,8 +17,8 @@ import threading
 class DownloaderThread(QThread):
     download_finished = pyqtSignal()
 
-    def __init__(self, link, quality, copy_thumbnail_link, dwnld_list_widget, quality_menu,
-                 loading_label, main_window, save_path, progress_text, folder_path=None):
+    def __init__(self, link, quality, dwnld_list_widget, quality_menu,
+                 loading_label, main_window, save_path, progress_text, mp3_only, folder_path=None, copy_thumbnail_link=None):
         super().__init__()
         self.link = link
         self.quality = quality
@@ -30,6 +30,7 @@ class DownloaderThread(QThread):
         self.save_path = save_path
         self.progress_textbox = progress_text
         self.main_window = main_window
+        self.mp3_only = mp3_only
 
     def run(self):
         def get_gif():
@@ -38,57 +39,43 @@ class DownloaderThread(QThread):
             gif_path = "resource/misc/" + gif
             return gif_path
 
-
         self.loading_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
         self.loading_movie = QMovie(get_gif())
         self.loading_label.setMovie(self.loading_movie)
 
-        # loading_animation()
-
         playlist = Playlist(self.link)
         playlist._video_regex = re.compile(r"\"url\":\"(/watch\?v=[\w-]*)")
         title = playlist.title
-        # playlist.streams.filter(file_extension=extension)
         self.list_item = QListWidgetItem(
             "Downloading: " + title)
         self.download_list_widget.addItem(self.list_item)
 
-        # Get the selected quality option
         choice = self.quality_menu.currentIndex()
 
-        # print(len(playlist.video_urls))
         for video in playlist.videos:
-            self.progress_textbox.append('Downloading: {} with URL: {}'.format(video.title, video.watch_url))
-            self.progress_textbox.append("\n")
+            if not self.mp3_only:
+                self.progress_textbox.append('Downloading: {} with URL: {}'.format(video.title, video.watch_url))
+                self.progress_textbox.append("\n")
 
-            filtered_streams = video.streams.filter(type='video', progressive=False, file_extension='mp4')
+                filtered_streams = video.streams.filter(type='video', progressive=False, file_extension='mp4')
 
-            selected_stream = filtered_streams.filter(resolution=self.quality).first()
+                selected_stream = filtered_streams.filter(resolution=self.quality).first()
 
-            selected_stream.download(output_path=self.save_path)
+                selected_stream.download(output_path=self.save_path)
 
-            self.progress_textbox.append('Downloaded: {}'.format(video.title))
+                self.progress_textbox.append('Downloaded: {}'.format(video.title))
 
-        # if self.download_captions:
-        #    for video in playlist.videos:
-        #        # Download and save captions if enabled
-        #        captions = video.captions
-        #        language_dict = {}
-        #        for caption in captions:
-        #           language_name = caption.name.split(" - ")[0]  # Extracting the main language name
-        #          language_code = caption.code.split(".")[0]  # Extracting the main language code
-        #
-        #                   if language_name not in language_dict:
-        #                      language_dict[language_name] = language_code
-        #
-        #              lang = language_dict.get(lang_get)
-        #
-        #               caption_dwnld = video.captions.get_by_language_code(lang)
-        #              caption_dwnld = caption_dwnld.xml_captions
-        #
-        #               # Save the caption file in the same directory as the video
-        #              with open(caption_file_path, 'w', encoding="utf-8") as file:
-        #                 file.write(caption_dwnld)
+            elif self.mp3_only:
+                self.progress_textbox.append('Downloading: {} with URL: {}'.format((video.title+" -audio"), video.watch_url))
+                self.progress_textbox.append("\n")
+
+                filtered_streams = video.streams.filter(only_audio=True).first()
+
+                # selected_stream = filtered_streams.filter(only_audio=True).first()
+
+                filtered_streams.download(output_path=self.save_path)
+
+                self.progress_textbox.append('Downloaded: {}'.format(video.title))
 
         self.download_finished.emit()
         self.list_item.setText((title + " - Downloaded"))
@@ -128,10 +115,12 @@ class YoutubePlaylist(QWidget):
         self.quality_layout.addWidget(self.quality_menu)
         self.options_layout.addSpacerItem(spacer_item_medium)
         self.thumbnail_url_checkbox = CheckBox('Copy Thumbnail URL', self)
+        self.audio_only_checkbox = CheckBox('Download Audio Only', self)
 
         self.options_group = QGroupBox("Additional Options")
         self.options_group_layout = QVBoxLayout(self.options_group)
         self.options_group_layout.addWidget(self.thumbnail_url_checkbox)
+        self.options_group_layout.addWidget(self.audio_only_checkbox)
         self.options_layout.addWidget(self.options_group)
 
         self.main_layout.addSpacerItem(spacer_item_small)
@@ -164,9 +153,7 @@ class YoutubePlaylist(QWidget):
         self.main_layout.addLayout(self.count_layout)
 
         self.setLayout(self.main_layout)
-        self.caption_list = None  # Define the caption_list attribute
-
-        # Other initialization code...
+        self.caption_list = None
 
     def get_quality(self):
         url = self.link_entry.text()
@@ -181,15 +168,14 @@ class YoutubePlaylist(QWidget):
             pass
 
     def download(self):
-        def get_gif():
-            gifs = ["loading.gif", "loading_2.gif"]
-            gif = random.choice(gifs)
-            gif_path = "resource/misc/" + gif
-            return gif_path
-
         link = self.link_entry.text()
         quality = self.quality_menu.currentText()
-        copy_thumbnail_link = self.thumbnail_url_checkbox.isChecked()
+        mp3_only = ""
+        if self.audio_only_checkbox.isChecked():
+            mp3_only = True
+        else:
+            mp3_only = False
+
         title = ""
         try:
             yt = Playlist(link)
@@ -203,13 +189,13 @@ class YoutubePlaylist(QWidget):
         self.downloader_thread = DownloaderThread(
             link=link,
             quality=quality,
-            copy_thumbnail_link=copy_thumbnail_link,
             save_path=save_path,  # Pass the save path here
             loading_label=self.loading_label,
             dwnld_list_widget=self.download_list_widget,
             quality_menu=self.quality_menu,
             main_window=self,
-            progress_text=self.download_list_text
+            progress_text=self.download_list_text,
+            mp3_only=mp3_only
         )
         self.downloader_thread.download_finished.connect(self.show_download_finished_message)
         self.downloader_thread.start()

@@ -17,7 +17,7 @@ class DownloaderThread(QThread):
     download_finished = pyqtSignal()
 
     def __init__(self, link, quality, download_captions, copy_thumbnail_link, dwnld_list_widget, quality_menu,
-                 loading_label, main_window, save_path, caption_list=None, folder_path=None):
+                 loading_label, main_window, save_path, mp3_only, caption_list=None, folder_path=None):
         super().__init__()
         self.link = link
         self.quality = quality
@@ -30,6 +30,7 @@ class DownloaderThread(QThread):
         self.folder_path = folder_path
         self.save_path = save_path
         self.main_window = main_window
+        self.mp3_only = mp3_only
 
     def run(self):
 
@@ -45,22 +46,36 @@ class DownloaderThread(QThread):
         self.loading_movie = QMovie(get_gif())
         self.loading_label.setMovie(self.loading_movie)
 
+        if not self.mp3_only:
+            youtube_client = YouTube(self.link)
+            title = youtube_client.title
+            youtube_client.streams.filter(file_extension=extension)
+            self.list_item = QListWidgetItem(
+                "Downloading: " + title)
+            self.download_list_widget.addItem(self.list_item)
+
+            # Get available streams for the video
+            streams = youtube_client.streams.filter(progressive=False)
+
+            # Get the selected quality option
+            choice = self.quality_menu.currentIndex()
+            stream = streams[choice]
+
+            # Download the video
+            stream.download(self.save_path)
         youtube_client = YouTube(self.link)
         title = youtube_client.title
-        youtube_client.streams.filter(file_extension=extension)
-        self.list_item = QListWidgetItem(
-            "Downloading: " + title)
-        self.download_list_widget.addItem(self.list_item)
 
-        # Get available streams for the video
-        streams = youtube_client.streams.filter(progressive=False)
+        if self.mp3_only:
+            youtube_client.streams.filter(file_extension=extension)
+            self.list_item = QListWidgetItem(
+                "Downloading: " + title)
+            self.download_list_widget.addItem(self.list_item)
 
-        # Get the selected quality option
-        choice = self.quality_menu.currentIndex()
-        stream = streams[choice]
+            # Get available streams for the video
+            streams = youtube_client.streams.filter(only_audio=True).first()
 
-        # Download the video
-        stream.download(self.save_path)
+            streams.download(self.save_path)
 
         if self.download_captions:
             # Download and save captions if enabled
@@ -121,12 +136,14 @@ class YoutubeVideo(QWidget):
         self.quality_layout.addWidget(self.quality_menu)
         self.options_layout.addSpacerItem(spacer_item_medium)
         self.thumbnail_url_checkbox = CheckBox('Copy Thumbnail Link', self)
+        self.audio_only_checkbox = CheckBox('Download Audio Only', self)
         self.captions_checkbox = CheckBox('Download Captions', self)
         self.captions_checkbox.stateChanged.connect(self.trigger_captions_list)
 
         self.options_group = QGroupBox("Additional Options")
         self.options_group_layout = QVBoxLayout(self.options_group)
         self.options_group_layout.addWidget(self.captions_checkbox)
+        self.options_group_layout.addWidget(self.audio_only_checkbox)
         self.options_group_layout.addWidget(self.thumbnail_url_checkbox)
         self.options_layout.addWidget(self.options_group)
 
@@ -232,6 +249,11 @@ class YoutubeVideo(QWidget):
         quality = self.quality_menu.currentText()
         download_captions = self.captions_checkbox.isChecked()
         copy_thumbnail_link = self.thumbnail_url_checkbox.isChecked()
+        mp3_only = ""
+        if self.audio_only_checkbox.isChecked():
+            mp3_only = True
+        else:
+            mp3_only = False
         title = ""
         try:
             yt = YouTube(link)
@@ -252,7 +274,8 @@ class YoutubeVideo(QWidget):
             dwnld_list_widget=self.download_list_widget,
             quality_menu=self.quality_menu,
             main_window=self,
-            caption_list=self.caption_list
+            caption_list=self.caption_list,
+            mp3_only=mp3_only
         )
         self.downloader_thread.download_finished.connect(self.show_download_finished_message)
         self.downloader_thread.start()
