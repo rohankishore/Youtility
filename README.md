@@ -9,9 +9,7 @@ YouTube video and playlist downloader made with PyQt6 and PyTube. In simple term
 
 <div align="center">
   
-  <a href="https://opensource.org/licenses/MIT">![License](https://img.shields.io/badge/License-MIT-yellow)</a>
   <a href='https://ko-fi.com/V7V7QZ7GS' target='_blank'><img height='36' style='border:0px;height:29px;' src='https://storage.ko-fi.com/cdn/kofi5.png?v=3' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
-  <a href="https://www.fiverr.com/rohancodespy/">![Demo](https://img.shields.io/badge/Fiverr-Hire-green)</a>
 </div>
 
 ## 📺 What is Youtility?
