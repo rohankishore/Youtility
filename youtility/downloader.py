@@ -10,7 +10,6 @@ from qfluentwidgets import (LineEdit,
                             StrongBodyLabel, MessageBox, CheckBox, ListWidget)
 from pytube import YouTube
 from consts import msgs, extension
-import threading
 
 
 class DownloaderThread(QThread):

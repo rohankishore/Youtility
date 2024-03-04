@@ -3,21 +3,20 @@ import random
 
 import pytube.exceptions
 from PyQt6.QtCore import Qt, QThread, pyqtSignal
-from PyQt6.QtGui import QMovie
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QGroupBox, QPushButton, QComboBox, QFileDialog, QHBoxLayout, \
-    QSpacerItem, QLabel, QListWidgetItem
-from qfluentwidgets import (LineEdit,
-                            StrongBodyLabel, MessageBox, CheckBox, ListWidget)
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QComboBox, QFileDialog, QHBoxLayout, \
+    QSpacerItem, QListWidgetItem
 from pytube import YouTube
-from consts import msgs, extension
-import threading
+from qfluentwidgets import (LineEdit,
+                            StrongBodyLabel, MessageBox, ListWidget)
 
+from consts import msgs, extension
+import xml.etree.ElementTree as ET
 
 class DownloaderThread(QThread):
     download_finished = pyqtSignal()
 
     def __init__(self, link, dwnld_list_widget,
-                 main_window, save_path, caption_list=None, folder_path=None):
+                 main_window, save_path, ext, caption_list=None, folder_path=None):
         super().__init__()
         self.link = link
         self.caption_list = caption_list
@@ -25,6 +24,7 @@ class DownloaderThread(QThread):
         self.folder_path = folder_path
         self.save_path = save_path
         self.main_window = main_window
+        self.ext = ext
 
     def run(self):
         def get_gif():
@@ -33,7 +33,11 @@ class DownloaderThread(QThread):
             gif_path = "resource/misc/" + gif
             return gif_path
 
-        caption_file_path = os.path.join(self.save_path, "captions.xml")
+        caption_file_path = ""
+        if self.ext == "XML":
+            caption_file_path = os.path.join(self.save_path, "captions.xml")
+        else:
+            caption_file_path = os.path.join(self.save_path, "captions.srt")
 
         # Ensure the directory exists, create it if it doesn't
         os.makedirs(self.save_path, exist_ok=True)
@@ -59,14 +63,57 @@ class DownloaderThread(QThread):
         lang = language_dict.get(lang_get)
 
         caption_dwnld = youtube_client.captions.get_by_language_code(lang)
-        caption_dwnld = caption_dwnld.xml_captions
 
-        # Save the caption file in the same directory as the video
+        caption_dwnld_xml = caption_dwnld.xml_captions
+        if self.ext == "SRT":
+            caption_dwnld_xml = self.convert_xml_string_to_srt(caption_dwnld_xml)
+        caption_dwnld_srt = ""
+        # try:
+        #      caption_dwnld_srt = caption_dwnld.generate_srt_captions()
+        # except Exception as e:
+        #    print(e)
+        #   w = MessageBox(
+        #      "Can't generate SRT File",
+        #     "We couldn't generate SRT file due to some unexpected error. Please try again later.",
+        #    self.main_window
+        # )#yesButton.setText('Alright Blud 🤓')
+        # w.cancelButton.setText('Yeah let me try again 🤝')
+        #
+        #           if w.exec():
+        #              pass
+
         with open(caption_file_path, 'w', encoding="utf-8") as file:
-            file.write(caption_dwnld)
+            file.write(caption_dwnld_xml)
 
         self.download_finished.emit()
         self.list_item.setText((title + " :Captions" + " - Downloaded"))
+
+    def convert_xml_string_to_srt(self, xml_string):
+        root = ET.fromstring(xml_string)
+
+        srt_content = ""
+        count = 1
+        for child in root.findall('.//p'):
+            start = int(child.attrib.get('t', 0)) / 1000  # Convert milliseconds to seconds
+            duration = int(child.attrib.get('d', 0)) / 1000  # Convert milliseconds to seconds
+
+            if start != 0 and duration != 0:
+                start_time = self.convert_time_format(start)
+                end_time = self.convert_time_format(start + duration)
+
+                srt_content += str(count) + '\n'
+                srt_content += start_time + ' --> ' + end_time + '\n'
+                srt_content += child.text.strip() + '\n\n'
+
+                count += 1
+
+        return srt_content.strip()
+
+    def convert_time_format(self, seconds):
+        hours = seconds // 3600
+        minutes = (seconds % 3600) // 60
+        seconds = seconds % 60
+        return "{:02d}:{:02d}:{:06.3f}".format(int(hours), int(minutes), seconds)
 
 
 class CaptionWidget(QWidget):
@@ -100,6 +147,7 @@ class CaptionWidget(QWidget):
         self.main_layout.addLayout(self.options_layout)
         self.ext_menu = QComboBox()
         self.ext_menu.addItems(["XML", "SRT"])
+        self.ext_menu.setCurrentText("SRT")
         self.quality_layout.addWidget(self.ext_menu)
         self.options_layout.addSpacerItem(spacer_item_medium)
 
@@ -172,10 +220,10 @@ class CaptionWidget(QWidget):
             except pytube.exceptions.RegexMatchError:
                 pass
 
-
     def download(self):
 
         link = self.link_entry.text()
+        ext = self.ext_menu.currentText()
 
         title = ""
         try:
@@ -193,7 +241,7 @@ class CaptionWidget(QWidget):
             dwnld_list_widget=self.download_list_widget,
             main_window=self,
             caption_list=self.caption_list,
+            ext=ext
         )
-       # self.downloader_thread.download_finished.connect(self.show_download_finished_message)
+        # self.downloader_thread.download_finished.connect(self.show_download_finished_message)
         self.downloader_thread.start()
-
