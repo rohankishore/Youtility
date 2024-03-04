@@ -14,6 +14,7 @@ from qframelesswindow import FramelessWindow, TitleBar
 from downloader import YoutubeVideo
 from settings import SettingsPage
 from playlist import YoutubePlaylist
+from get_captions import CaptionWidget
 
 APP_NAME = "Youtility"
 
@@ -122,6 +123,7 @@ class Window(FramelessWindow):
         # create sub interface
         self.videoInterface = YoutubeVideo()
         self.playlistInterface = YoutubePlaylist()
+        self.captionInterface = CaptionWidget()
         self.settingsInterface = SettingsPage()
 
         # initialize layout
@@ -142,6 +144,7 @@ class Window(FramelessWindow):
     def initNavigation(self):
         self.addSubInterface(self.videoInterface, FIF.VIDEO, 'Video', selectedIcon=FIF.VIDEO)
         self.addSubInterface(self.playlistInterface, FIF.FOLDER, 'Playlist', selectedIcon=FIF.FOLDER)
+        self.addSubInterface(self.captionInterface, QIcon("resource/icons/captions.svg"), 'Captions', selectedIcon=QIcon("resource/icons/captions.svg"))
         self.addSubInterface(self.settingsInterface, FIF.SETTING, 'Settings', NavigationItemPosition.BOTTOM,
                              FIF.SETTING)
         self.navigationBar.addItem(
