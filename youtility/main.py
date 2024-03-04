@@ -1,4 +1,5 @@
 # coding:utf-8
+import json
 import sys
 
 import qdarktheme
@@ -14,6 +15,12 @@ from downloader import YoutubeVideo
 from settings import SettingsPage
 from playlist import YoutubePlaylist
 
+APP_NAME = "Youtility"
+
+with open("resource/misc/config.json", "r") as themes_file:
+    _themes = json.load(themes_file)
+
+theme_color = _themes["theme"]
 
 class StackedWidget(QFrame):
     """ Stacked widget """
@@ -106,7 +113,7 @@ class Window(FramelessWindow):
         setTheme(Theme.DARK)
 
         # change the theme color
-        setThemeColor('#000000')
+        setThemeColor(theme_color)
 
         self.hBoxLayout = QHBoxLayout(self)
         self.navigationBar = NavigationBar(self)
@@ -116,8 +123,6 @@ class Window(FramelessWindow):
         self.videoInterface = YoutubeVideo()
         self.playlistInterface = YoutubePlaylist()
         self.settingsInterface = SettingsPage()
-        # self.artistInterface = artist.Artist(self)
-        # self.libraryInterface = Widget('library Interface', self)
 
         # initialize layout
         self.initLayout()
@@ -182,12 +187,12 @@ class Window(FramelessWindow):
         self.navigationBar.setCurrentItem(widget.objectName())
 
     def showMessageBox(self):
-        text_for_about = "Heya! it's Rohan, the creator of cvGen. I hope you've enjoyed using this app as much as I enjoyed making it." + "" + "\n" + "\n" \
+        text_for_about = f"Heya! it's Rohan, the creator of {APP_NAME}. I hope you've enjoyed using this app as much as I enjoyed making it." + "" + "\n" + "\n" \
                                                                                                                                                       "I'm a school student and I can't earn my own money LEGALLY. So any donations will be largely appreciated. Also, if you find any bugs / have any feature requests, you can open a Issue/ Pull Request in the Repo." \
                                                                                                                                                       "You can visit GitHub by pressing the button below. You can find Ko-Fi link there :) " + "\n" + "\n" + \
-                         "Once again, thank you for using cvGen. Please consider giving it a star ⭐ as it will largely motivate me to create more of such apps. Also do consider giving me a follow ;) "
+                         f"Once again, thank you for using {APP_NAME}. Please consider giving it a star ⭐ as it will largely motivate me to create more of such apps. Also do consider giving me a follow ;) "
         w = MessageBox(
-            'cvGen',
+            APP_NAME,
             text_for_about,
             self
         )
@@ -195,7 +200,7 @@ class Window(FramelessWindow):
         w.cancelButton.setText('Return')
 
         if w.exec():
-            QDesktopServices.openUrl(QUrl("https://github.com/rohankishore/cvGen"))
+            QDesktopServices.openUrl(QUrl("https://github.com/rohankishore/Youtility"))
 
 
 if __name__ == '__main__':
@@ -211,6 +216,6 @@ if __name__ == '__main__':
     qdarktheme.enable_hi_dpi()
     app = QApplication(sys.argv)
     w = Window()
-    qdarktheme.setup_theme("dark", custom_colors={"primary": "#c69ef7"})
+    qdarktheme.setup_theme("dark", custom_colors={"primary": theme_color})
     w.show()
     app.exec()
