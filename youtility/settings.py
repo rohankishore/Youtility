@@ -4,7 +4,7 @@ from PyQt6.QtWidgets import QWidget, QVBoxLayout, QGroupBox, QPushButton, QCombo
 from qfluentwidgets import (LineEdit, TextEdit,
                             ScrollArea, StrongBodyLabel, MessageBox)
 
-with open("resource/misc/config.json", "r") as themes_file:
+with open("resources/misc/config.json", "r") as themes_file:
     _themes = json.load(themes_file)
 
 
@@ -39,7 +39,7 @@ class SettingsPage(QWidget):
     def save_json(self):
         _themes["theme"] = self.theme_color_line_edit.text()
 
-        with open("resource/misc/config.json", "w") as json_file:
+        with open("resources/misc/config.json", "w") as json_file:
             json.dump(_themes, json_file)
 
         w = MessageBox(

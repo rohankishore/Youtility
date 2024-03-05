@@ -36,7 +36,7 @@ class DownloaderThread(QThread):
         def get_gif():
             gifs = ["loading.gif", "loading_2.gif"]
             gif = random.choice(gifs)
-            gif_path = "resource/misc/" + gif
+            gif_path = "resources/misc/" + gif
             return gif_path
 
         caption_file_path = os.path.join(self.save_path, "captions.xml")
@@ -241,7 +241,7 @@ class YoutubeVideo(QWidget):
         def get_gif():
             gifs = ["loading.gif", "loading_2.gif"]
             gif = random.choice(gifs)
-            gif_path = "resource/misc/" + gif
+            gif_path = "resources/misc/" + gif
             return gif_path
 
         link = self.link_entry.text()

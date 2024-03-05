@@ -18,7 +18,7 @@ from get_captions import CaptionWidget
 
 APP_NAME = "Youtility"
 
-with open("resource/misc/config.json", "r") as themes_file:
+with open("resources/misc/config.json", "r") as themes_file:
     _themes = json.load(themes_file)
 
 theme_color = _themes["theme"]
@@ -144,7 +144,8 @@ class Window(FramelessWindow):
     def initNavigation(self):
         self.addSubInterface(self.videoInterface, FIF.VIDEO, 'Video', selectedIcon=FIF.VIDEO)
         self.addSubInterface(self.playlistInterface, FIF.FOLDER, 'Playlist', selectedIcon=FIF.FOLDER)
-        self.addSubInterface(self.captionInterface, QIcon("resource/icons/captions.svg"), 'Captions', selectedIcon=QIcon("resource/icons/captions.svg"))
+        self.addSubInterface(self.captionInterface, QIcon("resources/icons/captions.svg"), 'Captions', selectedIcon=QIcon(
+            "resources/icons/captions.svg"))
         self.addSubInterface(self.settingsInterface, FIF.SETTING, 'Settings', NavigationItemPosition.BOTTOM,
                              FIF.SETTING)
         self.navigationBar.addItem(
@@ -161,7 +162,7 @@ class Window(FramelessWindow):
 
     def initWindow(self):
         self.resize(1000, 600)
-        self.setWindowIcon(QIcon('resource/icons/icon.png'))
+        self.setWindowIcon(QIcon('resources/icons/icon.png'))
         self.setWindowTitle('Youtility')
         self.setQss()
 
@@ -179,7 +180,7 @@ class Window(FramelessWindow):
 
     def setQss(self):
         color = 'dark' if isDarkTheme() else 'light'
-        with open(f'resource/{color}/demo.qss', encoding='utf-8') as f:
+        with open(f'resources/{color}/demo.qss', encoding='utf-8') as f:
             self.setStyleSheet(f.read())
 
     def switchTo(self, widget):

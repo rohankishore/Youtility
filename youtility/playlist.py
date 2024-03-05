@@ -36,7 +36,7 @@ class DownloaderThread(QThread):
         def get_gif():
             gifs = ["loading.gif", "loading_2.gif"]
             gif = random.choice(gifs)
-            gif_path = "resource/misc/" + gif
+            gif_path = "resources/misc/" + gif
             return gif_path
 
         self.loading_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
