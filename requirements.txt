@@ -1,7 +1,6 @@
 PyQt6==6.6.1
 PyQt6_Fluent_Widgets==1.5.1
 PyQt6_Frameless_Window==0.3.8
-PyQt6_sip==13.5.2
 PyQt6_sip==13.6.0
 PyQt_Fluent_Widgets==1.4.1
 pytube==15.0.0
