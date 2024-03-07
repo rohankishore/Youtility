@@ -28,6 +28,7 @@ If you've ever tried to download YouTube videos online, I'm pretty sure that you
 - Single videos with captions file
 - Playlists (also as audio-only files)
 - Video to Mp3
+- Individual caption files
   
 
 ## 🧩 Interface
