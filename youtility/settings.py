@@ -18,17 +18,32 @@ class SettingsPage(QWidget):
         layout = QVBoxLayout()
         layout.addStretch()
 
+        theming_group = QGroupBox("Theming")
+        theming_layout = QVBoxLayout(theming_group)
+        layout.addWidget(theming_group)
+
+        pref_group = QGroupBox("Preferences")
+        pref_layout = QVBoxLayout(pref_group)
+        layout.addWidget(pref_group)
+
         # Theme Color Label
-        theme_color_label = StrongBodyLabel()
-        theme_color_label.setText("Theme Color:")
-        layout.addWidget(theme_color_label)
+        theme_color_label = StrongBodyLabel("Theme Color: ", self)
+        theming_layout.addWidget(theme_color_label)
 
         # Theme Color Line Edit
         self.theme_color_line_edit = LineEdit()
         self.theme_color_line_edit.setText(_themes["theme"])
-        layout.addWidget(self.theme_color_line_edit)
+        theming_layout.addWidget(self.theme_color_line_edit)
 
-        # Theme Color Button
+        def_sub_format_label = StrongBodyLabel("Default Subtitle Format: ", self)
+        pref_layout.addWidget(def_sub_format_label)
+
+        self.def_sub_format = QComboBox()
+        self.def_sub_format.addItems(["SRT", "XML"])
+        self.def_sub_format.setCurrentText(_themes["def_sub_format"])
+        pref_layout.addWidget(self.def_sub_format)
+
+        # Apply Button
         self.apply_button = QPushButton("Apply")
         self.apply_button.clicked.connect(self.save_json)
         layout.addWidget(self.apply_button)
@@ -38,6 +53,7 @@ class SettingsPage(QWidget):
 
     def save_json(self):
         _themes["theme"] = self.theme_color_line_edit.text()
+        _themes["def_sub_format"] = self.def_sub_format.currentText()
 
         with open("resources/misc/config.json", "w") as json_file:
             json.dump(_themes, json_file)

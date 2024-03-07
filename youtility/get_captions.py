@@ -1,3 +1,4 @@
+import json
 import os
 import random
 
@@ -11,6 +12,11 @@ from qfluentwidgets import (LineEdit,
 
 from consts import msgs, extension
 import xml.etree.ElementTree as ET
+
+with open("resources/misc/config.json", "r") as themes_file:
+    _themes = json.load(themes_file)
+
+def_sub_format = _themes["def_sub_format"]
 
 class DownloaderThread(QThread):
     download_finished = pyqtSignal()
@@ -67,20 +73,6 @@ class DownloaderThread(QThread):
         caption_dwnld_xml = caption_dwnld.xml_captions
         if self.ext == "SRT":
             caption_dwnld_xml = self.convert_xml_string_to_srt(caption_dwnld_xml)
-        caption_dwnld_srt = ""
-        # try:
-        #      caption_dwnld_srt = caption_dwnld.generate_srt_captions()
-        # except Exception as e:
-        #    print(e)
-        #   w = MessageBox(
-        #      "Can't generate SRT File",
-        #     "We couldn't generate SRT file due to some unexpected error. Please try again later.",
-        #    self.main_window
-        # )#yesButton.setText('Alright Blud 🤓')
-        # w.cancelButton.setText('Yeah let me try again 🤝')
-        #
-        #           if w.exec():
-        #              pass
 
         with open(caption_file_path, 'w', encoding="utf-8") as file:
             file.write(caption_dwnld_xml)
@@ -147,7 +139,7 @@ class CaptionWidget(QWidget):
         self.main_layout.addLayout(self.options_layout)
         self.ext_menu = QComboBox()
         self.ext_menu.addItems(["XML", "SRT"])
-        self.ext_menu.setCurrentText("SRT")
+        self.ext_menu.setCurrentText(def_sub_format)
         self.quality_layout.addWidget(self.ext_menu)
         self.options_layout.addSpacerItem(spacer_item_medium)
 
