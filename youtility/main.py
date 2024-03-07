@@ -12,9 +12,9 @@ from qfluentwidgets import (NavigationBar, NavigationItemPosition, MessageBox,
 from qfluentwidgets import FluentIcon as FIF
 from qframelesswindow import FramelessWindow, TitleBar
 from downloader import YoutubeVideo
-from settings import SettingsPage
-from playlist import YoutubePlaylist
-from get_captions import CaptionWidget
+import settings
+import playlist
+import get_captions
 
 APP_NAME = "Youtility"
 
@@ -122,9 +122,9 @@ class Window(FramelessWindow):
 
         # create sub interface
         self.videoInterface = YoutubeVideo()
-        self.playlistInterface = YoutubePlaylist()
-        self.captionInterface = CaptionWidget()
-        self.settingsInterface = SettingsPage()
+        self.playlistInterface = playlist.YoutubePlaylist()
+        self.captionInterface = get_captions.CaptionWidget()
+        self.settingsInterface = settings.SettingsPage()
 
         # initialize layout
         self.initLayout()
