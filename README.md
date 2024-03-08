@@ -23,7 +23,7 @@ YouTube video and playlist downloader made with PyQt6 and PyTube. [Download Now]
 
 <br>
 
-If you've ever tried to download YouTube videos online, I'm pretty sure that you're familiar with the above messages. Well, your savior(me lol) is here. Meet Youtility, a YouTube downloader with NO ads or bloats, and open source :). With Youtility, say goodbye to enduring those pesky, dodgy ads while downloading YouTube videos. It's your ticket to hassle-free downloads without the BS of intrusive advertisements. 
+If you've ever tried to download YouTube videos online, I'm pretty sure that you're familiar with the above messages. Well, your saviour(me lol) is here. Meet Youtility, a YouTube downloader with NO ads or bloats, and open source :). With Youtility, say goodbye to enduring those pesky, dodgy ads while downloading YouTube videos. It's your ticket to hassle-free downloads without the BS of intrusive advertisements. 
 
 **You can download**
 - Single videos with captions file
@@ -71,6 +71,19 @@ This project was made possible just because of [PyTube](https://github.com/pytub
 
 <br>
 
+## ⚠️ Disclaimer
+
+This application is intended for personal use only. The user assumes full responsibility for ensuring that the downloaded content is used in compliance with the copyright laws and regulations applicable in their jurisdiction.
+
+This application is designed to facilitate downloading videos from YouTube for offline viewing or personal use. It is not intended to be used for any commercial purposes, distribution, or sharing of copyrighted material without proper authorization from the content owners or in violation of YouTube's terms of service.
+
+The developers of this application do not endorse or promote the unauthorized downloading or distribution of copyrighted content. Users are advised to respect the intellectual property rights of content creators and to obtain proper permissions before downloading or using any content for purposes other than personal viewing.
+
+By using this application, you agree to use the downloaded content according to applicable laws and regulations and accept full responsibility for any misuse or violation of copyright laws.
+
+The developers of this application shall not be held liable for any unauthorized or improper use of the downloaded content. Users are solely responsible for their actions and are encouraged to use this application responsibly and ethically.
+
+<br>
 
 ### I hope you'll enjoy using Youtility as much as I enjoyed while making it. Thanks a lot 💖
 
