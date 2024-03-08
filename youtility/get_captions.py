@@ -18,6 +18,7 @@ with open("resources/misc/config.json", "r") as themes_file:
 
 def_sub_format = _themes["def_sub_format"]
 
+
 class DownloaderThread(QThread):
     download_finished = pyqtSignal()
 
@@ -150,12 +151,16 @@ class CaptionWidget(QWidget):
         self.main_layout.addLayout(self.captions_layout)
 
         # Download Button
-        self.button_layout = QHBoxLayout()
+        self.button_layout = QVBoxLayout()
         self.main_layout.addLayout(self.button_layout)
         self.button_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
+
         self.download_button = QPushButton("Download")
         self.download_button.clicked.connect(self.download)
+        self.convert_captions = QPushButton("Convert Existing XML Captions to SRT")
+        self.convert_captions.clicked.connect(self.convert_existing_captions)
         self.button_layout.addWidget(self.download_button)
+        self.button_layout.addWidget(self.convert_captions)
 
         # GIF Loading Screen
         self.gif_layout = QHBoxLayout()
@@ -237,3 +242,47 @@ class CaptionWidget(QWidget):
         )
         # self.downloader_thread.download_finished.connect(self.show_download_finished_message)
         self.downloader_thread.start()
+
+    def convert_xml_string_to_srt(self, xml_string):
+        root = ET.fromstring(xml_string)
+
+        srt_content = ""
+        count = 1
+        for child in root.findall('.//p'):
+            start = int(child.attrib.get('t', 0)) / 1000  # Convert milliseconds to seconds
+            duration = int(child.attrib.get('d', 0)) / 1000  # Convert milliseconds to seconds
+
+            if start != 0 and duration != 0:
+                start_time = self.convert_time_format(start)
+                end_time = self.convert_time_format(start + duration)
+
+                srt_content += str(count) + '\n'
+                srt_content += start_time + ' --> ' + end_time + '\n'
+                srt_content += child.text.strip() + '\n\n'
+
+                count += 1
+
+        return srt_content.strip()
+
+    def convert_time_format(self, seconds):
+        hours = seconds // 3600
+        minutes = (seconds % 3600) // 60
+        seconds = seconds % 60
+        return "{:02d}:{:02d}:{:06.3f}".format(int(hours), int(minutes), seconds)
+
+    def convert_existing_captions(self):
+        options = QFileDialog.Option.DontUseNativeDialog
+        file_filter = ";XML Files (*.xml)"
+        file_filter_save_xml = "Subtitle Files (*.srt);;"
+        filename, _ = QFileDialog.getOpenFileName(self, 'Select SRT/XML File', '', file_filter, options=options)
+        if filename:
+            if ".xml" in filename:
+                with open(filename, 'r', encoding='utf-8') as xml_file:
+                    xml_string = xml_file.read()
+                srt_string = self.convert_xml_string_to_srt(xml_string=xml_string)
+                save_filename, _ = QFileDialog.getSaveFileName(self, 'Save File', '', file_filter_save_xml, options=options)
+                if save_filename:
+                    print('Selected save location:', save_filename)
+                    with open((save_filename+".srt"), 'w', encoding='utf-8') as file:
+                        file.write(srt_string)
+                    print('SRT file created and content written.')
