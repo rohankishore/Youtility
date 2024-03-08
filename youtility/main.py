@@ -211,15 +211,9 @@ if __name__ == '__main__':
     QApplication.setHighDpiScaleFactorRoundingPolicy(
         Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
 
-    # ----- DEPRECIATED ------ #
-
-    # QApplication.setAttribute(Qt.AA_EnableHighDpiScaling)
-    # QApplication.setAttribute(Qt.AA_UseHighDpiPixmaps)
-
-    # ----- DEPRECIATED ------ #
     qdarktheme.enable_hi_dpi()
     app = QApplication(sys.argv)
     w = Window()
     qdarktheme.setup_theme("dark", custom_colors={"primary": theme_color})
     w.show()
-    app.exec()
+    sys.exit(app.exec())
