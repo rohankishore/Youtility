@@ -6,15 +6,16 @@ import qdarktheme
 from PyQt6.QtCore import Qt, pyqtSignal, QEasingCurve, QUrl
 from PyQt6.QtGui import QIcon, QDesktopServices
 from PyQt6.QtWidgets import QLabel, QHBoxLayout, QVBoxLayout, QApplication, QFrame
+from qfluentwidgets import FluentIcon as FIF
 from qfluentwidgets import (NavigationBar, NavigationItemPosition, MessageBox,
                             isDarkTheme, setTheme, Theme,
                             PopUpAniStackedWidget, setThemeColor)
-from qfluentwidgets import FluentIcon as FIF
 from qframelesswindow import FramelessWindow, TitleBar
-from downloader import YoutubeVideo
-import settings
-import playlist
+
 import get_captions
+import playlist
+import settings
+from downloader import YoutubeVideo
 
 APP_NAME = "Youtility"
 
@@ -22,6 +23,8 @@ with open("resources/misc/config.json", "r") as themes_file:
     _themes = json.load(themes_file)
 
 theme_color = _themes["theme"]
+progressive = _themes["progressive"]
+
 
 class StackedWidget(QFrame):
     """ Stacked widget """
@@ -144,8 +147,9 @@ class Window(FramelessWindow):
     def initNavigation(self):
         self.addSubInterface(self.videoInterface, FIF.VIDEO, 'Video', selectedIcon=FIF.VIDEO)
         self.addSubInterface(self.playlistInterface, FIF.FOLDER, 'Playlist', selectedIcon=FIF.FOLDER)
-        self.addSubInterface(self.captionInterface, QIcon("resources/icons/captions.svg"), 'Captions', selectedIcon=QIcon(
-            "resources/icons/captions.svg"))
+        self.addSubInterface(self.captionInterface, QIcon("resources/icons/captions.svg"), 'Captions',
+                             selectedIcon=QIcon(
+                                 "resources/icons/captions.svg"))
         self.addSubInterface(self.settingsInterface, FIF.SETTING, 'Settings', NavigationItemPosition.BOTTOM,
                              FIF.SETTING)
         self.navigationBar.addItem(
@@ -192,8 +196,8 @@ class Window(FramelessWindow):
 
     def showMessageBox(self):
         text_for_about = f"Heya! it's Rohan, the creator of {APP_NAME}. I hope you've enjoyed using this app as much as I enjoyed making it." + "" + "\n" + "\n" \
-                                                                                                                                                      "I'm a school student and I can't earn my own money LEGALLY. So any donations will be largely appreciated. Also, if you find any bugs / have any feature requests, you can open a Issue/ Pull Request in the Repo." \
-                                                                                                                                                      "You can visit GitHub by pressing the button below. You can find Ko-Fi link there :) " + "\n" + "\n" + \
+                                                                                                                                                            "I'm a school student and I can't earn my own money LEGALLY. So any donations will be largely appreciated. Also, if you find any bugs / have any feature requests, you can open a Issue/ Pull Request in the Repo." \
+                                                                                                                                                            "You can visit GitHub by pressing the button below. You can find Ko-Fi link there :) " + "\n" + "\n" + \
                          f"Once again, thank you for using {APP_NAME}. Please consider giving it a star ⭐ as it will largely motivate me to create more of such apps. Also do consider giving me a follow ;) "
         w = MessageBox(
             APP_NAME,

@@ -1,6 +1,7 @@
 import json
 import os
 import random
+import xml.etree.ElementTree as ET
 
 import pytube.exceptions
 from PyQt6.QtCore import Qt, QThread, pyqtSignal
@@ -11,7 +12,6 @@ from qfluentwidgets import (LineEdit,
                             StrongBodyLabel, MessageBox, ListWidget)
 
 from consts import msgs, extension
-import xml.etree.ElementTree as ET
 
 with open("resources/misc/config.json", "r") as themes_file:
     _themes = json.load(themes_file)

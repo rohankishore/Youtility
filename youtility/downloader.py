@@ -1,3 +1,4 @@
+import json
 import os
 import random
 
@@ -6,10 +7,17 @@ from PyQt6.QtCore import Qt, QThread, pyqtSignal
 from PyQt6.QtGui import QMovie
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QGroupBox, QPushButton, QComboBox, QFileDialog, QHBoxLayout, \
     QSpacerItem, QLabel, QListWidgetItem
+from pytube import YouTube
 from qfluentwidgets import (LineEdit,
                             StrongBodyLabel, MessageBox, CheckBox, ListWidget)
-from pytube import YouTube
+
 from consts import msgs, extension
+
+with open("resources/misc/config.json", "r") as themes_file:
+    _themes = json.load(themes_file)
+
+theme_color = _themes["theme"]
+progressive = _themes["progressive"]
 
 
 class DownloaderThread(QThread):
@@ -181,8 +189,13 @@ class YoutubeVideo(QWidget):
     def get_quality(self):
         url = self.link_entry.text()
         try:
+            set_progressive = True
+            if progressive == "True":
+                set_progressive = True
+            else:
+                set_progressive = False
             youtube = pytube.YouTube(url)
-            streams = youtube.streams.filter(progressive=False)
+            streams = youtube.streams.filter(progressive=set_progressive)
             self.quality_menu.clear()
             for stream in streams:
                 self.quality_menu.addItem(stream.resolution)

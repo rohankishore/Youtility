@@ -1,4 +1,4 @@
-import os
+import json
 import random
 import re
 
@@ -7,12 +7,14 @@ from PyQt6.QtCore import Qt, QThread, pyqtSignal
 from PyQt6.QtGui import QMovie
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QGroupBox, QPushButton, QComboBox, QFileDialog, QHBoxLayout, \
     QSpacerItem, QLabel, QListWidgetItem
-from qfluentwidgets import (LineEdit,
-                            StrongBodyLabel, MessageBox, CheckBox, ListWidget, TextEdit)
 from pytube import Playlist
-from consts import msgs, extension
-import threading
+from qfluentwidgets import (LineEdit,
+                            CheckBox, ListWidget, TextEdit)
 
+with open("resources/misc/config.json", "r") as themes_file:
+    _themes = json.load(themes_file)
+
+progressive = _themes["progressive"]
 
 class DownloaderThread(QThread):
     download_finished = pyqtSignal()
@@ -111,7 +113,10 @@ class YoutubePlaylist(QWidget):
         self.main_layout.addLayout(self.options_layout)
         self.quality_menu = QComboBox()
         self.quality_menu.setPlaceholderText("Video Quality (Applies to all videos)")
-        self.quality_menu.addItems(["1080p", "720p", "480p", "360p", "240p", "144p"])
+        if progressive == "True":
+            self.quality_menu.addItems(["720p", "480p", "360p", "240p", "144p"])
+        else:
+            self.quality_menu.addItems(["2160p", "1440p", "1080p", "720p", "480p", "360p", "240p", "144p"])
         self.quality_layout.addWidget(self.quality_menu)
         self.options_layout.addSpacerItem(spacer_item_medium)
         self.thumbnail_url_checkbox = CheckBox('Copy Thumbnail URL', self)
@@ -158,9 +163,14 @@ class YoutubePlaylist(QWidget):
 
     def get_quality(self):
         url = self.link_entry.text()
+        set_progressive = True
         try:
             youtube = pytube.YouTube(url)
-            streams = youtube.streams.filter(progressive=False)
+            if progressive == "True":
+                set_progressive = True
+            else:
+                set_progressive = False
+            streams = youtube.streams.filter(progressive=set_progressive)
             self.quality_menu.clear()
             for stream in streams:
                 self.quality_menu.addItem(stream.resolution)

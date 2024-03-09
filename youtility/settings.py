@@ -1,8 +1,7 @@
 import json
-import os
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QGroupBox, QPushButton, QComboBox, QFileDialog, QColorDialog
-from qfluentwidgets import (LineEdit, TextEdit,
-                            ScrollArea, StrongBodyLabel, MessageBox)
+
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QGroupBox, QPushButton, QComboBox
+from qfluentwidgets import (LineEdit, StrongBodyLabel, MessageBox, CheckBox)
 
 with open("resources/misc/config.json", "r") as themes_file:
     _themes = json.load(themes_file)
@@ -37,11 +36,20 @@ class SettingsPage(QWidget):
 
         def_sub_format_label = StrongBodyLabel("Default Subtitle Format: ", self)
         pref_layout.addWidget(def_sub_format_label)
-
         self.def_sub_format = QComboBox()
         self.def_sub_format.addItems(["SRT", "XML"])
         self.def_sub_format.setCurrentText(_themes["def_sub_format"])
         pref_layout.addWidget(self.def_sub_format)
+
+        set_progressive_label = StrongBodyLabel("Allow higher res downloads (audio may be missing): ", self)
+        pref_layout.addWidget(set_progressive_label)
+        self.set_progressive = CheckBox()
+        self.set_progressive.setText("Allow")
+        if _themes["progressive"] == "False":
+            self.set_progressive.setChecked(True)
+        else:
+            pass
+        pref_layout.addWidget(self.set_progressive)
 
         # Apply Button
         self.apply_button = QPushButton("Apply")
@@ -50,10 +58,16 @@ class SettingsPage(QWidget):
 
         self.setLayout(layout)
 
-
     def save_json(self):
+        progressive_state = "True"
+        if self.set_progressive.isChecked():
+            progressive_state = "False"
+        else:
+            progressive_state = "True"
+
         _themes["theme"] = self.theme_color_line_edit.text()
         _themes["def_sub_format"] = self.def_sub_format.currentText()
+        _themes["progressive"] = progressive_state
 
         with open("resources/misc/config.json", "w") as json_file:
             json.dump(_themes, json_file)
