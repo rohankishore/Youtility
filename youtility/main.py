@@ -5,7 +5,7 @@ import sys
 import qdarktheme
 from PyQt6.QtCore import Qt, pyqtSignal, QEasingCurve, QUrl
 from PyQt6.QtGui import QIcon, QDesktopServices
-from PyQt6.QtWidgets import QLabel, QHBoxLayout, QVBoxLayout, QApplication, QFrame
+from PyQt6.QtWidgets import QApplication, QLabel, QHBoxLayout, QVBoxLayout, QFrame
 from qfluentwidgets import FluentIcon as FIF
 from qfluentwidgets import (NavigationBar, NavigationItemPosition, MessageBox,
                             isDarkTheme, setTheme, Theme,
@@ -212,11 +212,11 @@ class Window(FramelessWindow):
 
 
 if __name__ == '__main__':
+    app = QApplication(sys.argv)
     QApplication.setHighDpiScaleFactorRoundingPolicy(
         Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
 
     qdarktheme.enable_hi_dpi()
-    app = QApplication(sys.argv)
     w = Window()
     qdarktheme.setup_theme("dark", custom_colors={"primary": theme_color})
     w.show()
