@@ -13,8 +13,8 @@ YouTube video and playlist downloader made with PyQt6 and PyTube. [Download Now]
 [![Github all releases](https://img.shields.io/github/downloads/rohankishore/Youtility/total.svg)](https://GitHub.com/rohankishore/Youtility/releases/)
 </div>
 
-## 📺 What is Youtility?
-> "Hey, are you lonely?"
+## 📺 What is Youtility? 
+> "Hey, are you lonely?" 
  
   
 > "Hot Milfs 5kms near you" 
