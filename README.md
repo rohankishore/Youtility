@@ -41,7 +41,7 @@ If you've ever tried to download YouTube videos online, I'm pretty sure that you
 <br>
 
 ## 👒 Getting Started
-
+  
 ### Download EXE
 - Head over to [Releases](https://github.com/rohankishore/Youtility/releases)
 - Download `Youtility_vX.zip` file (where X is the current latest version)
