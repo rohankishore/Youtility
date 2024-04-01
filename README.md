@@ -51,7 +51,7 @@ If you've ever tried to download YouTube videos online, I'm pretty sure that you
 ### Run Manually via Python 
 
 ```bash
-pip install -r requirements.txt
+pip install -r requirements.txt   
 ```
 
 - Run `main.py`
