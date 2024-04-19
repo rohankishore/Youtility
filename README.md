@@ -12,7 +12,7 @@ YouTube video and playlist downloader made with PyQt6 and PyTube. [Download Now]
   <a href='https://ko-fi.com/V7V7QZ7GS' target='_blank'><img height='36' style='border:0px;height:29px;' src='https://storage.ko-fi.com/cdn/kofi5.png?v=3' border='0' alt='Buy Me a Coffee at ko-fi.com' /></a>
 [![Github all releases](https://img.shields.io/github/downloads/rohankishore/Youtility/total.svg)](https://GitHub.com/rohankishore/Youtility/releases/)
 </div>
-     
+        
 ## 📺 What is Youtility? 
 > "Hey, are you lonely?" 
          
