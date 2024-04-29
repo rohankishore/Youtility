@@ -14,7 +14,7 @@ YouTube video and playlist downloader made with PyQt6 and PyTube. [Download Now]
 </div>
         
 ## 📺 What is Youtility? 
-> "Hey, are you lonely?" 
+> "Hey, are you lonely?"   
               
      
 > "Hot Milfs 5kms near you"         
