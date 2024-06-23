@@ -5,3 +5,4 @@ PyQt6_sip==13.6.0
 PyQt_Fluent_Widgets==1.4.1
 pytube==15.0.0
 pyqtdarktheme==2.1.0
+yt-dlp==2024.5.27
