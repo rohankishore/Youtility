@@ -1,16 +1,27 @@
-import yt_dlp
-from PyQt6.QtCore import Qt, QThread, pyqtSignal
+import sys
+
+from PyQt6.QtCore import Qt, QThread, pyqtSignal, QObject
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, \
     QSpacerItem, QLabel, QFileDialog
 from pytube import YouTube
 from qfluentwidgets import (LineEdit,
-                            ListWidget, PushButton, MessageBox)
-from yt_dlp.utils import download_range_func
+                            ListWidget, PushButton, MessageBox, ProgressBar, TextEdit)
+
+
+class Stream(QObject):
+    new_text = pyqtSignal(str)
+
+    def write(self, text):
+        self.new_text.emit(str(text))
+
+    def flush(self):
+        pass
 
 
 class DownloaderThread(QThread):
     download_finished = pyqtSignal()
     on_progress = pyqtSignal(int)
+    new_text = pyqtSignal(str)
 
     def __init__(self, link, start_time, end_time, save_path):
         super().__init__()
@@ -18,49 +29,59 @@ class DownloaderThread(QThread):
         self.start_time = start_time
         self.end_time = end_time
         self.save_path = save_path
+        self.stream = Stream()
+        self.stream.new_text.connect(self.handle_new_text)
 
-    def download(self):
+    def run(self):
+        link = self.link
+        start_time = self.hhmmss_to_seconds(self.start_time)
+        end_time = self.hhmmss_to_seconds(self.end_time)
+
+        import yt_dlp
+        from yt_dlp.utils import download_range_func
+
         yt_opts = {
             'outtmpl': self.save_path,
             'verbose': True,
-            'download_ranges': download_range_func(None, [(self.start_time, self.end_time)]),
+            'download_ranges': download_range_func(None, [(start_time, end_time)]),
             'force_keyframes_at_cuts': True,
+            'progress_hooks': [self.progress_hook],
         }
+
+        # Redirect stdout and stderr
+        sys.stdout = self.stream
+        sys.stderr = self.stream
+
         try:
-            if self.start_time <= self.end_time:
+            if start_time <= end_time:
                 with yt_dlp.YoutubeDL(yt_opts) as ydl:
-                    ydl.download(self.link)
+                    ydl.download([link])
 
-            elif self.start_time > self.end_time:
-                w = MessageBox(
-                    "ERROR",
-                    "Start time cannot be greater than end time")
-                w.yesButton.setText('Alright!')
-                w.cancelButton.setText('ALRIGHT!, but in CAPS LOCK')
-                if w.exec():
-                    pass
-        except:
-            w = MessageBox(
-                "ERROR",
-                "Unexpected Error Occurred")
-            w.yesButton.setText('Hmm OK!')
-            w.cancelButton.setText('Let me try again')
-            if w.exec():
-                pass
+                self.download_finished.emit()
+            else:
+                self.show_message_box("ERROR", "Start time cannot be greater than end time")
+        except Exception as e:
+            self.show_message_box("ERROR", f"Unexpected Error Occurred: {e}")
 
-    def init_timers(self):
-        try:
-            import yt_dlp
+        # Reset stdout and stderr to their original state
+        sys.stdout = sys.__stdout__
+        sys.stderr = sys.__stderr__
 
-            ydl_opts = {}
-            length = ""
+    def handle_new_text(self, text):
+        self.new_text.emit(text)
 
-            video = YouTube(self.link)
-            length = video.length
-            length = self.seconds_to_hhmmss(length)
-            self.end_time.setText(length)
-        except:
-            pass
+    def show_message_box(self, title, message):
+        w = MessageBox(title, message)
+        w.yesButton.setText('OK')
+        w.exec()
+
+    def progress_hook(self, d):
+        if d['status'] == 'downloading':
+            total_bytes = d.get('total_bytes') or d.get('total_bytes_estimate')
+            downloaded_bytes = d.get('downloaded_bytes')
+            if total_bytes and downloaded_bytes:
+                progress = int(downloaded_bytes / total_bytes * 100)
+                self.on_progress.emit(progress)
 
     def hhmmss_to_seconds(self, hhmmss):
         h, m, s = map(int, hhmmss.split(':'))
@@ -71,7 +92,6 @@ class DownloaderThread(QThread):
         m = (seconds % 3600) // 60
         s = seconds % 60
         return f"{h:02}:{m:02}:{s:02}"
-
 
 
 class CutVideos(QWidget):
@@ -108,6 +128,20 @@ class CutVideos(QWidget):
         self.time_layout.addWidget(self.start_time)
         self.time_layout.addWidget(self.end_time)
 
+        self.main_layout.addSpacerItem(spacer_item_medium)
+
+        self.progress_bar = ProgressBar()
+        self.main_layout.addWidget(self.progress_bar)
+
+        self.main_layout.addSpacerItem(spacer_item_medium)
+
+        # Console Output
+        self.console_output = TextEdit()
+        self.console_output.setReadOnly(True)
+        self.main_layout.addWidget(self.console_output)
+
+        self.main_layout.addSpacerItem(spacer_item_medium)
+
         # Download Button
         self.button_layout = QHBoxLayout()
         self.main_layout.addLayout(self.button_layout)
@@ -133,13 +167,23 @@ class CutVideos(QWidget):
 
     def download(self):
         link = self.link_entry.text()
-        start_time = self.hhmmss_to_seconds(self.start_time.text())
-        end_time = self.hhmmss_to_seconds(self.end_time.text())
+        start_time = (self.start_time.text())
+        end_time = (self.end_time.text())
 
         save_path, _ = QFileDialog.getSaveFileName(self, "Save file", "cut_video")
 
-        self.download_thread = DownloaderThread(link, start_time, end_time, save_path)
-        self.download_thread.finished.connect(self.show_download_finished_message)
+        if save_path:
+            thread = DownloaderThread(link, start_time, end_time, save_path)
+            thread.download_finished.connect(self.show_download_finished_message)
+            thread.on_progress.connect(self.update_progress_bar)
+            thread.new_text.connect(self.append_text)
+            thread.start()
+
+    def update_progress_bar(self, value):
+        self.progress_bar.setValue(value)
+
+    def append_text(self, text):
+        self.console_output.append(text)
 
     def init_timers(self):
         link = self.link_entry.text()
