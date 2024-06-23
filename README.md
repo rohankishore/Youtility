@@ -2,7 +2,6 @@
 
 ![Group 3 (1)](https://github.com/rohankishore/Youtility/assets/109947257/8ec73f10-0bed-4dbc-8201-269db2adaddc)
 
-# Youtility
 YouTube video and playlist downloader made with PyQt6 and PyTube. [Download Now](https://github.com/rohankishore/Youtility/releases)
 
 </div>
