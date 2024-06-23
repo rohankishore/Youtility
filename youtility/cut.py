@@ -1,9 +1,78 @@
-from PyQt6.QtCore import Qt
+import yt_dlp
+from PyQt6.QtCore import Qt, QThread, pyqtSignal
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, \
     QSpacerItem, QLabel, QFileDialog
 from pytube import YouTube
 from qfluentwidgets import (LineEdit,
                             ListWidget, PushButton, MessageBox)
+from yt_dlp.utils import download_range_func
+
+
+class DownloaderThread(QThread):
+    download_finished = pyqtSignal()
+    on_progress = pyqtSignal(int)
+
+    def __init__(self, link, start_time, end_time, save_path):
+        super().__init__()
+        self.link = link
+        self.start_time = start_time
+        self.end_time = end_time
+        self.save_path = save_path
+
+    def download(self):
+        yt_opts = {
+            'outtmpl': self.save_path,
+            'verbose': True,
+            'download_ranges': download_range_func(None, [(self.start_time, self.end_time)]),
+            'force_keyframes_at_cuts': True,
+        }
+        try:
+            if self.start_time <= self.end_time:
+                with yt_dlp.YoutubeDL(yt_opts) as ydl:
+                    ydl.download(self.link)
+
+            elif self.start_time > self.end_time:
+                w = MessageBox(
+                    "ERROR",
+                    "Start time cannot be greater than end time")
+                w.yesButton.setText('Alright!')
+                w.cancelButton.setText('ALRIGHT!, but in CAPS LOCK')
+                if w.exec():
+                    pass
+        except:
+            w = MessageBox(
+                "ERROR",
+                "Unexpected Error Occurred")
+            w.yesButton.setText('Hmm OK!')
+            w.cancelButton.setText('Let me try again')
+            if w.exec():
+                pass
+
+    def init_timers(self):
+        try:
+            import yt_dlp
+
+            ydl_opts = {}
+            length = ""
+
+            video = YouTube(self.link)
+            length = video.length
+            length = self.seconds_to_hhmmss(length)
+            self.end_time.setText(length)
+        except:
+            pass
+
+    def hhmmss_to_seconds(self, hhmmss):
+        h, m, s = map(int, hhmmss.split(':'))
+        return h * 3600 + m * 60 + s
+
+    def seconds_to_hhmmss(self, seconds):
+        h = seconds // 3600
+        m = (seconds % 3600) // 60
+        s = seconds % 60
+        return f"{h:02}:{m:02}:{s:02}"
+
+
 
 class CutVideos(QWidget):
     def __init__(self):
@@ -69,38 +138,8 @@ class CutVideos(QWidget):
 
         save_path, _ = QFileDialog.getSaveFileName(self, "Save file", "cut_video")
 
-        import yt_dlp
-        from yt_dlp.utils import download_range_func
-
-        yt_opts = {
-            'outtmpl' : save_path,
-            'verbose': True,
-            'download_ranges': download_range_func(None, [(start_time, end_time)]),
-            'force_keyframes_at_cuts': True,
-        }
-        try:
-            if start_time <= end_time:
-                with yt_dlp.YoutubeDL(yt_opts) as ydl:
-                    ydl.download(link)
-
-            elif start_time > end_time:
-                w = MessageBox(
-                    "ERROR",
-                    "Start time cannot be greater than end time",
-                    self)
-                w.yesButton.setText('Alright!')
-                w.cancelButton.setText('ALRIGHT!, but in CAPS LOCK')
-                if w.exec():
-                    pass
-        except:
-            w = MessageBox(
-                "ERROR",
-                "Unexpected Error Occurred",
-                self)
-            w.yesButton.setText('Hmm OK!')
-            w.cancelButton.setText('Let me try again')
-            if w.exec():
-                pass
+        self.download_thread = DownloaderThread(link, start_time, end_time, save_path)
+        self.download_thread.finished.connect(self.show_download_finished_message)
 
     def init_timers(self):
         link = self.link_entry.text()
