@@ -2,15 +2,15 @@ import json
 import os
 import random
 import threading
-
+import sys
 import pytube.exceptions
 from PyQt6.QtCore import Qt, QThread, pyqtSignal
 from PyQt6.QtGui import QMovie
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QGroupBox, QComboBox, QFileDialog, QHBoxLayout, \
-    QSpacerItem, QLabel, QListWidgetItem
+    QSpacerItem, QLabel, QListWidgetItem, QProgressBar
 from pytube import YouTube
 from qfluentwidgets import (LineEdit,
-                            StrongBodyLabel, MessageBox, CheckBox, ListWidget, PushButton, ComboBox)
+                            StrongBodyLabel, MessageBox, CheckBox, ListWidget, PushButton, ComboBox, ProgressBar)
 
 from consts import msgs, extension
 
@@ -23,6 +23,7 @@ progressive = _themes["progressive"]
 
 class DownloaderThread(QThread):
     download_finished = pyqtSignal()
+    progress_update = pyqtSignal(int)
 
     def __init__(self, link, quality, download_captions, copy_thumbnail_link, dwnld_list_widget, quality_menu,
                  loading_label, main_window, save_path, mp3_only, caption_list=None, folder_path=None):
@@ -39,9 +40,9 @@ class DownloaderThread(QThread):
         self.save_path = save_path
         self.main_window = main_window
         self.mp3_only = mp3_only
+        self.filesize = 0  # Initialize filesize here
 
     def run(self):
-
         def get_gif():
             gifs = ["loading.gif", "loading_2.gif"]
             gif = random.choice(gifs)
@@ -54,13 +55,13 @@ class DownloaderThread(QThread):
         self.loading_movie = QMovie(get_gif())
         self.loading_label.setMovie(self.loading_movie)
 
+        youtube_client = YouTube(self.link, on_progress_callback=self.progress_function)
+        title = youtube_client.title
+        self.list_item = QListWidgetItem("Downloading: " + title)
+        self.download_list_widget.addItem(self.list_item)
+
         if not self.mp3_only:
-            youtube_client = YouTube(self.link)
-            title = youtube_client.title
             youtube_client.streams.filter(file_extension=extension)
-            self.list_item = QListWidgetItem(
-                "Downloading: " + title)
-            self.download_list_widget.addItem(self.list_item)
 
             # Get available streams for the video
             streams = youtube_client.streams.filter(progressive=False)
@@ -69,30 +70,30 @@ class DownloaderThread(QThread):
             choice = self.quality_menu.currentIndex()
             stream = streams[choice]
 
+            self.filesize = stream.filesize  # Set the file size
+
             # Download the video
             stream.download(self.save_path)
 
-        youtube_client = YouTube(self.link)
-        title = youtube_client.title
-
-        if self.mp3_only:
+        else:
+            # For audio-only downloads
             youtube_client.streams.filter(file_extension=extension)
-            self.list_item = QListWidgetItem(
-                "Downloading: " + title)
-            self.download_list_widget.addItem(self.list_item)
 
-            # Get available streams for the video
-            streams = youtube_client.streams.filter(only_audio=True).first()
+            # Get available streams for the audio
+            stream = youtube_client.streams.filter(only_audio=True).first()
 
-            streams.download(self.save_path)
+            self.filesize = stream.filesize  # Set the file size
+
+            # Download the audio
+            stream.download(self.save_path)
 
         if self.download_captions:
             # Download and save captions if enabled
             captions = youtube_client.captions
             language_dict = {}
             for caption in captions:
-                language_name = caption.name.split(" - ")[0]  # Extracting the main language name
-                language_code = caption.code.split(".")[0]  # Extracting the main language code
+                language_name = caption.name.split(" - ")[0]
+                language_code = caption.code.split(".")[0]
 
                 if language_name not in language_dict:
                     language_dict[language_name] = language_code
@@ -109,6 +110,11 @@ class DownloaderThread(QThread):
 
         self.download_finished.emit()
         self.list_item.setText((title + " - Downloaded"))
+
+    def progress_function(self, chunk, file_handle, bytes_remaining):
+        current = ((self.filesize - bytes_remaining) / self.filesize)
+        percent = int(current * 100)
+        self.progress_update.emit(percent)
 
 
 class YoutubeVideo(QWidget):
@@ -176,6 +182,11 @@ class YoutubeVideo(QWidget):
         self.main_layout.addLayout(self.gif_layout)
         self.loading_label = QLabel()
         self.main_layout.addWidget(self.loading_label)
+
+        # Progress Bar
+        self.progress_bar = ProgressBar(self)
+        self.main_layout.addWidget(self.progress_bar)
+        self.progress_bar.hide()  # Initially hide the progress bar
 
         # Progress Area
         self.count_layout = QHBoxLayout()
@@ -297,7 +308,13 @@ class YoutubeVideo(QWidget):
             mp3_only=mp3_only
         )
         self.downloader_thread.download_finished.connect(self.show_download_finished_message)
+        self.downloader_thread.progress_update.connect(self.update_progress_bar)
+        self.progress_bar.show()
         self.downloader_thread.start()
 
     def show_download_finished_message(self):
-        self.loading_label.hide()
+        self.loading_label.setText("Download Finished")
+        #self.progress_bar.hide()
+
+    def update_progress_bar(self, percent):
+        self.progress_bar.setValue(percent)
