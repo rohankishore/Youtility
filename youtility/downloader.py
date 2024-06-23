@@ -1,15 +1,16 @@
 import json
 import os
 import random
+import threading
 
 import pytube.exceptions
 from PyQt6.QtCore import Qt, QThread, pyqtSignal
 from PyQt6.QtGui import QMovie
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QGroupBox, QPushButton, QComboBox, QFileDialog, QHBoxLayout, \
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QGroupBox, QComboBox, QFileDialog, QHBoxLayout, \
     QSpacerItem, QLabel, QListWidgetItem
 from pytube import YouTube
 from qfluentwidgets import (LineEdit,
-                            StrongBodyLabel, MessageBox, CheckBox, ListWidget)
+                            StrongBodyLabel, MessageBox, CheckBox, ListWidget, PushButton, ComboBox)
 
 from consts import msgs, extension
 
@@ -70,6 +71,7 @@ class DownloaderThread(QThread):
 
             # Download the video
             stream.download(self.save_path)
+
         youtube_client = YouTube(self.link)
         title = youtube_client.title
 
@@ -137,7 +139,7 @@ class YoutubeVideo(QWidget):
         self.options_layout = QHBoxLayout()
         self.main_layout.addLayout(self.quality_layout)
         self.main_layout.addLayout(self.options_layout)
-        self.quality_menu = QComboBox()
+        self.quality_menu = ComboBox()
         self.quality_menu.setPlaceholderText("Video Quality (Enter link to view)")
         # self.quality_menu.addItems(["2160p", "1440p", "1080p", "720p", "480p", "360p", "240p", "144p"])
         self.quality_layout.addWidget(self.quality_menu)
@@ -164,7 +166,8 @@ class YoutubeVideo(QWidget):
         self.button_layout = QHBoxLayout()
         self.main_layout.addLayout(self.button_layout)
         self.button_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        self.download_button = QPushButton("Download")
+        self.download_button = PushButton()
+        self.download_button.setText("Download")
         self.download_button.clicked.connect(self.download)
         self.button_layout.addWidget(self.download_button)
 
@@ -204,51 +207,55 @@ class YoutubeVideo(QWidget):
             pass
 
     def trigger_captions_list(self):
-        if self.captions_checkbox.isChecked():
-            link = self.link_entry.text()
-            if link == "":
-                msg = random.choice(msgs)
-                w = MessageBox(
-                    'No URL Found',
-                    msg,
-                    self
-                )
-                self.captions_checkbox.setChecked(False)
-                w.yesButton.setText('Alright Genius 🤓')
-                w.cancelButton.setText('Yeah let me try again 🤝')
+        def trigger_captions():
+            if self.captions_checkbox.isChecked():
+                link = self.link_entry.text()
+                if link == "":
+                    msg = random.choice(msgs)
+                    w = MessageBox(
+                        'No URL Found',
+                        msg,
+                        self
+                    )
+                    self.captions_checkbox.setChecked(False)
+                    w.yesButton.setText('Alright Genius 🤓')
+                    w.cancelButton.setText('Yeah let me try again 🤝')
 
-                if w.exec():
-                    pass
+                    if w.exec():
+                        pass
+
+                else:
+                    try:
+                        youtube_client = YouTube(link)
+                        captions = youtube_client.captions
+                        language_names = []
+                        language_dict = {}
+
+                        for caption in captions:
+                            language_name = caption.name.split(" - ")[0]  # Extracting the main language name
+                            language_code = caption.code.split(".")[0]  # Extracting the main language code
+
+                            if language_name not in language_dict:
+                                language_dict[language_name] = language_code
+
+                            if language_name not in language_names:
+                                language_names.append(language_name)
+
+                        self.caption_label = StrongBodyLabel('Caption Language', self)
+                        self.captions_layout.addWidget(self.caption_label)
+                        self.caption_list = ComboBox()
+                        self.caption_list.addItems(language_names)
+                        self.captions_layout.addWidget(self.caption_list)
+
+                    except pytube.exceptions.RegexMatchError:
+                        pass
 
             else:
-                try:
-                    youtube_client = YouTube(link)
-                    captions = youtube_client.captions
-                    language_names = []
-                    language_dict = {}
+                self.caption_list.hide()
+                self.caption_label.hide()
 
-                    for caption in captions:
-                        language_name = caption.name.split(" - ")[0]  # Extracting the main language name
-                        language_code = caption.code.split(".")[0]  # Extracting the main language code
-
-                        if language_name not in language_dict:
-                            language_dict[language_name] = language_code
-
-                        if language_name not in language_names:
-                            language_names.append(language_name)
-
-                    self.caption_label = StrongBodyLabel('Caption Language', self)
-                    self.captions_layout.addWidget(self.caption_label)
-                    self.caption_list = QComboBox()
-                    self.caption_list.addItems(language_names)
-                    self.captions_layout.addWidget(self.caption_list)
-
-                except pytube.exceptions.RegexMatchError:
-                    pass
-
-        else:
-            self.caption_list.hide()
-            self.caption_label.hide()
+        thread = threading.Thread(target=trigger_captions)
+        thread.start()
 
     def download(self):
         def get_gif():

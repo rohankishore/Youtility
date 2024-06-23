@@ -2,12 +2,12 @@
 import json
 import sys
 
-import qdarktheme
+# import qdarktheme
 from PyQt6.QtCore import Qt, pyqtSignal, QEasingCurve, QUrl
 from PyQt6.QtGui import QIcon, QDesktopServices
 from PyQt6.QtWidgets import QApplication, QLabel, QHBoxLayout, QVBoxLayout, QFrame
 from qfluentwidgets import FluentIcon as FIF
-from qfluentwidgets import (NavigationBar, NavigationItemPosition, MessageBox,
+from qfluentwidgets import (NavigationInterface, NavigationItemPosition, MessageBox,
                             isDarkTheme, setTheme, Theme,
                             PopUpAniStackedWidget, setThemeColor)
 from qframelesswindow import FramelessWindow, TitleBar
@@ -64,47 +64,27 @@ class CustomTitleBar(TitleBar):
 
     def __init__(self, parent):
         super().__init__(parent)
-        self.setFixedHeight(48)
-        self.hBoxLayout.removeWidget(self.minBtn)
-        self.hBoxLayout.removeWidget(self.maxBtn)
-        self.hBoxLayout.removeWidget(self.closeBtn)
-
         # add window icon
         self.iconLabel = QLabel(self)
-        self.iconLabel.setFixedSize(20, 20)
-        self.hBoxLayout.insertSpacing(0, 20)
+        self.iconLabel.setFixedSize(18, 18)
+        self.hBoxLayout.insertSpacing(0, 10)
         self.hBoxLayout.insertWidget(
-            1, self.iconLabel, 0, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+            1, self.iconLabel, 0, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignBottom)
         self.window().windowIconChanged.connect(self.setIcon)
 
         # add title label
         self.titleLabel = QLabel(self)
         self.hBoxLayout.insertWidget(
-            2, self.titleLabel, 0, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignVCenter)
+            2, self.titleLabel, 0, Qt.AlignmentFlag.AlignLeft | Qt.AlignmentFlag.AlignBottom)
         self.titleLabel.setObjectName('titleLabel')
         self.window().windowTitleChanged.connect(self.setTitle)
-
-        self.vBoxLayout = QVBoxLayout()
-        self.buttonLayout = QHBoxLayout()
-        self.buttonLayout.setSpacing(0)
-        self.buttonLayout.setContentsMargins(0, 0, 0, 0)
-        self.buttonLayout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        self.buttonLayout.addWidget(self.minBtn)  # This line adds the minBtn
-        self.buttonLayout.addWidget(self.maxBtn)  # This line adds the maxBtn
-        self.buttonLayout.addWidget(self.closeBtn)  # This line adds the closeBtn
-        self.vBoxLayout.addLayout(self.buttonLayout)
-        self.vBoxLayout.addStretch(1)
-        self.hBoxLayout.addLayout(self.vBoxLayout, 0)
 
     def setTitle(self, title):
         self.titleLabel.setText(title)
         self.titleLabel.adjustSize()
 
     def setIcon(self, icon):
-        self.iconLabel.setPixmap(QIcon(icon).pixmap(20, 20))
-
-    def resizeEvent(self, e):
-        pass
+        self.iconLabel.setPixmap(QIcon(icon).pixmap(18, 18))
 
 
 class Window(FramelessWindow):
@@ -120,7 +100,7 @@ class Window(FramelessWindow):
         setThemeColor(theme_color)
 
         self.hBoxLayout = QHBoxLayout(self)
-        self.navigationBar = NavigationBar(self)
+        self.navigationBar = NavigationInterface(self)
         self.stackWidget = StackedWidget(self)
 
         # create sub interface
@@ -178,7 +158,6 @@ class Window(FramelessWindow):
             icon=icon,
             text=text,
             onClick=lambda: self.switchTo(interface),
-            selectedIcon=selectedIcon,
             position=position,
         )
 
@@ -216,8 +195,8 @@ if __name__ == '__main__':
     QApplication.setHighDpiScaleFactorRoundingPolicy(
         Qt.HighDpiScaleFactorRoundingPolicy.PassThrough)
 
-    qdarktheme.enable_hi_dpi()
+    #qdarktheme.enable_hi_dpi()
     w = Window()
-    qdarktheme.setup_theme("dark", custom_colors={"primary": theme_color})
+    #qdarktheme.setup_theme("dark", custom_colors={"primary": theme_color})
     w.show()
     sys.exit(app.exec())

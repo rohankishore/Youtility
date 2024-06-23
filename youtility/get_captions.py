@@ -5,11 +5,11 @@ import xml.etree.ElementTree as ET
 
 import pytube.exceptions
 from PyQt6.QtCore import Qt, QThread, pyqtSignal
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QPushButton, QComboBox, QFileDialog, QHBoxLayout, \
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QComboBox, QFileDialog, QHBoxLayout, \
     QSpacerItem, QListWidgetItem
 from pytube import YouTube
 from qfluentwidgets import (LineEdit,
-                            StrongBodyLabel, MessageBox, ListWidget)
+                            StrongBodyLabel, MessageBox, ListWidget, PushButton)
 
 from consts import msgs, extension
 
@@ -155,9 +155,11 @@ class CaptionWidget(QWidget):
         self.main_layout.addLayout(self.button_layout)
         self.button_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
 
-        self.download_button = QPushButton("Download")
+        self.download_button = PushButton()
+        self.download_button.setText("Download")
         self.download_button.clicked.connect(self.download)
-        self.convert_captions = QPushButton("Convert Existing XML Captions to SRT")
+        self.convert_captions = PushButton()
+        self.convert_captions.setText("Convert Existing XML Captions to SRT")
         self.convert_captions.clicked.connect(self.convert_existing_captions)
         self.button_layout.addWidget(self.download_button)
         self.button_layout.addWidget(self.convert_captions)

@@ -5,22 +5,24 @@ import re
 import pytube.exceptions
 from PyQt6.QtCore import Qt, QThread, pyqtSignal
 from PyQt6.QtGui import QMovie
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QGroupBox, QPushButton, QComboBox, QFileDialog, QHBoxLayout, \
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QGroupBox, QComboBox, QFileDialog, QHBoxLayout, \
     QSpacerItem, QLabel, QListWidgetItem
 from pytube import Playlist
 from qfluentwidgets import (LineEdit,
-                            CheckBox, ListWidget, TextEdit)
+                            CheckBox, ListWidget, TextEdit, PushButton)
 
 with open("resources/misc/config.json", "r") as themes_file:
     _themes = json.load(themes_file)
 
 progressive = _themes["progressive"]
 
+
 class DownloaderThread(QThread):
     download_finished = pyqtSignal()
 
     def __init__(self, link, quality, dwnld_list_widget, quality_menu,
-                 loading_label, main_window, save_path, progress_text, mp3_only, folder_path=None, copy_thumbnail_link=None):
+                 loading_label, main_window, save_path, progress_text, mp3_only, folder_path=None,
+                 copy_thumbnail_link=None):
         super().__init__()
         self.link = link
         self.quality = quality
@@ -68,7 +70,8 @@ class DownloaderThread(QThread):
                 self.progress_textbox.append('Downloaded: {}'.format(video.title))
 
             elif self.mp3_only:
-                self.progress_textbox.append('Downloading: {} with URL: {}'.format((video.title+" -audio"), video.watch_url))
+                self.progress_textbox.append(
+                    'Downloading: {} with URL: {}'.format((video.title + " -audio"), video.watch_url))
                 self.progress_textbox.append("\n")
 
                 filtered_streams = video.streams.filter(only_audio=True).first()
@@ -138,7 +141,8 @@ class YoutubePlaylist(QWidget):
         self.button_layout = QHBoxLayout()
         self.main_layout.addLayout(self.button_layout)
         self.button_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
-        self.download_button = QPushButton("Download")
+        self.download_button = PushButton()
+        self.download_button.setText("Download")
         self.download_button.clicked.connect(self.download)
         self.button_layout.addWidget(self.download_button)
 
