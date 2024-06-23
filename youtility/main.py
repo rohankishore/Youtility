@@ -12,6 +12,7 @@ from qfluentwidgets import (NavigationInterface, NavigationItemPosition, Message
                             PopUpAniStackedWidget, setThemeColor)
 from qframelesswindow import FramelessWindow, TitleBar
 
+import cut
 import get_captions
 import playlist
 import settings
@@ -106,6 +107,7 @@ class Window(FramelessWindow):
         # create sub interface
         self.videoInterface = YoutubeVideo()
         self.playlistInterface = playlist.YoutubePlaylist()
+        self.cutInterface = cut.CutVideos()
         self.captionInterface = get_captions.CaptionWidget()
         self.settingsInterface = settings.SettingsPage()
 
@@ -127,6 +129,7 @@ class Window(FramelessWindow):
     def initNavigation(self):
         self.addSubInterface(self.videoInterface, FIF.VIDEO, 'Video', selectedIcon=FIF.VIDEO)
         self.addSubInterface(self.playlistInterface, FIF.FOLDER, 'Playlist', selectedIcon=FIF.FOLDER)
+        self.addSubInterface(self.cutInterface, FIF.CUT, 'Cut & Download', selectedIcon=FIF.CUT)
         self.addSubInterface(self.captionInterface, QIcon("resources/icons/captions.svg"), 'Captions',
                              selectedIcon=QIcon(
                                  "resources/icons/captions.svg"))
