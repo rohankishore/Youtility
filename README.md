@@ -25,11 +25,12 @@ YouTube video and playlist downloader made with PyQt6 and PyTube. [Download Now]
   
 <br>    
 
-If you've ever tried to download YouTube videos online, I'm pretty sure that you're familiar with the above messages. Well, your saviour(me lol) is here. Meet Youtility, a YouTube downloader with NO ads or bloats, and open source :). With Youtility, say goodbye to enduring those pesky, dodgy ads while downloading YouTube videos. It's your ticket to hassle-free downloads without the BS of intrusive advertisements. 
+If you've tried downloading YouTube videos online, you're familiar with the above messages. Well, your saviour(me lol) is here. Meet Youtility, a YouTube downloader with NO ads or bloats, and open source :). With Youtility, say goodbye to enduring those pesky, dodgy ads while downloading YouTube videos. It's your ticket to hassle-free downloads without the BS of intrusive advertisements. 
 
 **You can download**
 - Single videos with captions file  
 - Playlists (also as audio-only files)
+- Cut and Download specific parts of a video
 - Video to Mp3
 - Individual caption files
   
