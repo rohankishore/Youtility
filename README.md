@@ -33,11 +33,18 @@ If you've tried downloading YouTube videos online, you're familiar with the abov
 - Individual caption files
   
 
-## 🧩 Interface  
+## 🧩 How does it look?  
 
-![image](https://github.com/rohankishore/Youtility/assets/109947257/04b5fb62-add8-4456-90d4-358f530b17cd)
+![image](https://github.com/rohankishore/Youtility/assets/109947257/fe950733-4229-4073-99fa-651381528032)
 
-![image](https://github.com/rohankishore/Youtility/assets/109947257/5e11c76b-ad78-4bac-a5c5-b120b6dbc963)   
+![image](https://github.com/rohankishore/Youtility/assets/109947257/ff56eb68-1a03-4b82-b022-04afcf4caa8d)
+
+![image](https://github.com/rohankishore/Youtility/assets/109947257/714e0b83-8064-49f2-92b7-728dd65623b2)
+
+![image](https://github.com/rohankishore/Youtility/assets/109947257/87fb1b0d-f99d-4925-914a-9777a0bd04de)
+
+![image](https://github.com/rohankishore/Youtility/assets/109947257/46fcabfd-03c5-4f88-8c81-63bb9f112890)
+
 
 <br>
 
