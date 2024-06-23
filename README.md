@@ -1,5 +1,3 @@
-# THIS PROJECT IS UNDER MAINTENANCE. SO I'D RECOMMEND YOU USE THE RELEASES SINCE THE SOURCE CODE WILL CHANGE TIME TO TIME AND MAY/WILL CONTAIN BUGS LOTS. 
-
 <div align="center">
 
 ![Group 3 (1)](https://github.com/rohankishore/Youtility/assets/109947257/8ec73f10-0bed-4dbc-8201-269db2adaddc)
