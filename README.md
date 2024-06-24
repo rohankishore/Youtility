@@ -28,7 +28,7 @@ If you've tried downloading YouTube videos online, you're familiar with the abov
 - Single videos with captions file  
 - Playlists (also as audio-only files)
 - Cut and Download specific parts of a video
-- Video to Mp3
+- Video to Mp3 / FLAC
 - Individual caption files
   
 
