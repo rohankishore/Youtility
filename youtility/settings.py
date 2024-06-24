@@ -1,7 +1,7 @@
 import json
 
-from PyQt6.QtWidgets import QWidget, QVBoxLayout, QGroupBox, QPushButton, QComboBox
-from qfluentwidgets import (LineEdit, StrongBodyLabel, MessageBox, CheckBox)
+from PyQt6.QtWidgets import QWidget, QVBoxLayout, QGroupBox, QPushButton, QComboBox, QSpacerItem
+from qfluentwidgets import (LineEdit, StrongBodyLabel, MessageBox, CheckBox, ComboBox)
 
 with open("resources/misc/config.json", "r") as themes_file:
     _themes = json.load(themes_file)
@@ -14,6 +14,10 @@ class SettingsPage(QWidget):
         self.initUI()
 
     def initUI(self):
+
+        spacer_item_small = QSpacerItem(0, 10)
+        spacer_item_medium = QSpacerItem(0, 20)
+
         layout = QVBoxLayout()
         layout.addStretch()
 
@@ -36,15 +40,15 @@ class SettingsPage(QWidget):
 
         def_sub_format_label = StrongBodyLabel("Default Subtitle Format: ", self)
         pref_layout.addWidget(def_sub_format_label)
-        self.def_sub_format = QComboBox()
+        self.def_sub_format = ComboBox()
         self.def_sub_format.addItems(["SRT", "XML"])
         self.def_sub_format.setCurrentText(_themes["def_sub_format"])
         pref_layout.addWidget(self.def_sub_format)
 
-        set_progressive_label = StrongBodyLabel("Allow higher res downloads (audio may be missing): ", self)
-        pref_layout.addWidget(set_progressive_label)
+        pref_layout.addSpacerItem(spacer_item_medium)
+
         self.set_progressive = CheckBox()
-        self.set_progressive.setText("Allow")
+        self.set_progressive.setText("Allow higher res downloads (audio may be missing): ")
         if _themes["progressive"] == "False":
             self.set_progressive.setChecked(True)
         else:

@@ -46,12 +46,6 @@ class DownloaderThread(QThread):
         self.filename = filename
 
     def run(self):
-        def get_gif():
-            gifs = ["loading.gif", "loading_2.gif"]
-            gif = random.choice(gifs)
-            gif_path = "resources/misc/" + gif
-            return gif_path
-
         caption_file_path = os.path.join(self.save_path, "captions.xml")
 
         self.loading_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
@@ -161,10 +155,13 @@ class YoutubeVideo(QWidget):
         self.quality_menu.setPlaceholderText("Video Quality (Enter link to view)")
         # self.quality_menu.addItems(["2160p", "1440p", "1080p", "720p", "480p", "360p", "240p", "144p"])
         self.quality_layout.addWidget(self.quality_menu)
+
         self.options_layout.addSpacerItem(spacer_item_medium)
         self.thumbnail_url_checkbox = CheckBox('Copy Thumbnail Link', self)
+
         self.audio_only_checkbox = CheckBox('Download Audio Only', self)
         self.audio_only_checkbox.stateChanged.connect(self.update_audio_format)
+
         self.captions_checkbox = CheckBox('Download Captions', self)
         self.captions_checkbox.stateChanged.connect(self.trigger_captions_list)
 

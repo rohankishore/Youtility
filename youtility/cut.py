@@ -1,11 +1,14 @@
+import logging
 import sys
 
-from PyQt6.QtCore import Qt, QThread, pyqtSignal, QObject
+from PyQt6.QtCore import Qt, QThread, pyqtSignal, QObject, pyqtSlot
 from PyQt6.QtWidgets import QWidget, QVBoxLayout, QHBoxLayout, \
     QSpacerItem, QLabel, QFileDialog
 from pytube import YouTube
 from qfluentwidgets import (LineEdit,
                             ListWidget, PushButton, MessageBox, ProgressBar, TextEdit)
+
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(levelname)s - %(message)s')
 
 
 class Stream(QObject):
@@ -20,7 +23,6 @@ class Stream(QObject):
 
 class DownloaderThread(QThread):
     download_finished = pyqtSignal()
-    on_progress = pyqtSignal(int)
     new_text = pyqtSignal(str)
 
     def __init__(self, link, start_time, end_time, save_path):
@@ -45,7 +47,6 @@ class DownloaderThread(QThread):
             'verbose': True,
             'download_ranges': download_range_func(None, [(start_time, end_time)]),
             'force_keyframes_at_cuts': True,
-            'progress_hooks': [self.progress_hook],
         }
 
         # Redirect stdout and stderr
@@ -74,14 +75,6 @@ class DownloaderThread(QThread):
         w = MessageBox(title, message)
         w.yesButton.setText('OK')
         w.exec()
-
-    def progress_hook(self, d):
-        if d['status'] == 'downloading':
-            total_bytes = d.get('total_bytes') or d.get('total_bytes_estimate')
-            downloaded_bytes = d.get('downloaded_bytes')
-            if total_bytes and downloaded_bytes:
-                progress = int(downloaded_bytes / total_bytes * 100)
-                self.on_progress.emit(progress)
 
     def hhmmss_to_seconds(self, hhmmss):
         h, m, s = map(int, hhmmss.split(':'))
@@ -130,9 +123,6 @@ class CutVideos(QWidget):
 
         self.main_layout.addSpacerItem(spacer_item_medium)
 
-        self.progress_bar = ProgressBar()
-        self.main_layout.addWidget(self.progress_bar)
-
         self.main_layout.addSpacerItem(spacer_item_medium)
 
         # Console Output
@@ -151,11 +141,16 @@ class CutVideos(QWidget):
         self.download_button.clicked.connect(self.download)
         self.button_layout.addWidget(self.download_button)
 
-        # GIF Loading Screen
-        self.gif_layout = QHBoxLayout()
-        self.main_layout.addLayout(self.gif_layout)
         self.loading_label = QLabel()
         self.main_layout.addWidget(self.loading_label)
+
+        self.main_layout.addSpacerItem(spacer_item_medium)
+        self.main_layout.addSpacerItem(spacer_item_medium)
+        self.main_layout.addSpacerItem(spacer_item_medium)
+        self.main_layout.addSpacerItem(spacer_item_medium)
+
+        disclaimer = QLabel("<b>***</b> <b><i> This feature uses YT-DLP and requires <a href='https://ffmpeg.org/download.html'>ffmpeg</a> and will take slightly longer time to render, and the quality is also NOT adjustable.</i></b>")
+        self.main_layout.addWidget(disclaimer)
 
         self.count_layout = QHBoxLayout()
         self.download_list_widget = ListWidget()
@@ -175,14 +170,12 @@ class CutVideos(QWidget):
         if save_path:
             thread = DownloaderThread(link, start_time, end_time, save_path)
             thread.download_finished.connect(self.show_download_finished_message)
-            thread.on_progress.connect(self.update_progress_bar)
             thread.new_text.connect(self.append_text)
             thread.start()
 
-    def update_progress_bar(self, value):
-        self.progress_bar.setValue(value)
-
+    @pyqtSlot(str)
     def append_text(self, text):
+        logging.debug(f"Appending text: {text}")
         self.console_output.append(text)
 
     def init_timers(self):
@@ -197,8 +190,8 @@ class CutVideos(QWidget):
             length = (video.length)
             length = self.seconds_to_hhmmss(length)
             self.end_time.setText(length)
-        except:
-            pass
+        except Exception as e:
+            logging.error(f"Failed to initialize timers: {e}", exc_info=True)
 
     def hhmmss_to_seconds(self, hhmmss):
         h, m, s = map(int, hhmmss.split(':'))
