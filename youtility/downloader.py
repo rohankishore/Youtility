@@ -1,6 +1,7 @@
 import json
 import os
 import random
+import subprocess
 import threading
 import sys
 import pytube.exceptions
@@ -26,7 +27,7 @@ class DownloaderThread(QThread):
     progress_update = pyqtSignal(int)
 
     def __init__(self, link, quality, download_captions, copy_thumbnail_link, dwnld_list_widget, quality_menu,
-                 loading_label, main_window, save_path, mp3_only, caption_list=None, folder_path=None):
+                 loading_label, main_window, save_path, mp3_only, audio_format, filename, caption_list=None, folder_path=None):
         super().__init__()
         self.link = link
         self.quality = quality
@@ -40,7 +41,9 @@ class DownloaderThread(QThread):
         self.save_path = save_path
         self.main_window = main_window
         self.mp3_only = mp3_only
-        self.filesize = 0  # Initialize filesize here
+        self.audio_format = audio_format
+        self.file_size = 0
+        self.filename = filename
 
     def run(self):
         def get_gif():
@@ -52,9 +55,6 @@ class DownloaderThread(QThread):
         caption_file_path = os.path.join(self.save_path, "captions.xml")
 
         self.loading_label.setAlignment(Qt.AlignmentFlag.AlignCenter)
-        self.loading_movie = QMovie(get_gif())
-        self.loading_label.setMovie(self.loading_movie)
-
         youtube_client = YouTube(self.link, on_progress_callback=self.progress_function)
         title = youtube_client.title
         self.list_item = QListWidgetItem("Downloading: " + title)
@@ -70,22 +70,32 @@ class DownloaderThread(QThread):
             choice = self.quality_menu.currentIndex()
             stream = streams[choice]
 
-            self.filesize = stream.filesize  # Set the file size
+            self.file_size = stream.file_size
 
             # Download the video
             stream.download(self.save_path)
 
         else:
-            # For audio-only downloads
-            youtube_client.streams.filter(file_extension=extension)
-
-            # Get available streams for the audio
+            youtube_client.streams.filter(file_extension='mp4')  # Use your specific extension
             stream = youtube_client.streams.filter(only_audio=True).first()
+            self.file_size = stream.filesize  # Set the file size
+            stream.download(output_path=self.save_path, filename=self.filename + ".mp4")
 
-            self.filesize = stream.filesize  # Set the file size
+            # Conversion to FLAC using ffmpeg
+            if self.audio_format == "FLAC":
+                input_file = os.path.join(self.save_path, self.filename + ".mp4").replace("\\", "/")
+                output_file = os.path.join(self.save_path, self.filename + ".flac").replace("\\", "/")
 
-            # Download the audio
-            stream.download(self.save_path)
+                # Run the ffmpeg command to convert mp4 to flac
+                ffmpeg_command = f'ffmpeg -i "{input_file}" "{output_file}"'
+                try:
+                    subprocess.run(ffmpeg_command, shell=True, check=True)
+                except subprocess.CalledProcessError as e:
+                    print(f"Error during conversion: {e}")
+                    self.list_item.setText((title + " - Download failed during conversion"))
+
+            self.download_finished.emit()
+            self.list_item.setText((title + " - Downloaded"))
 
         if self.download_captions:
             # Download and save captions if enabled
@@ -112,7 +122,7 @@ class DownloaderThread(QThread):
         self.list_item.setText((title + " - Downloaded"))
 
     def progress_function(self, chunk, file_handle, bytes_remaining):
-        current = ((self.filesize - bytes_remaining) / self.filesize)
+        current = ((self.file_size - bytes_remaining) / self.file_size)
         percent = int(current * 100)
         self.progress_update.emit(percent)
 
@@ -125,6 +135,7 @@ class YoutubeVideo(QWidget):
         spacer_item_medium = QSpacerItem(0, 20)
 
         self.setObjectName("Video")
+        self.audio_only_checkbox = ""
 
         self.main_layout = QVBoxLayout()
         self.main_layout.setAlignment(Qt.AlignmentFlag.AlignTop)
@@ -152,6 +163,7 @@ class YoutubeVideo(QWidget):
         self.options_layout.addSpacerItem(spacer_item_medium)
         self.thumbnail_url_checkbox = CheckBox('Copy Thumbnail Link', self)
         self.audio_only_checkbox = CheckBox('Download Audio Only', self)
+        self.audio_only_checkbox.stateChanged.connect(self.update_audio_format)
         self.captions_checkbox = CheckBox('Download Captions', self)
         self.captions_checkbox.stateChanged.connect(self.trigger_captions_list)
 
@@ -160,6 +172,7 @@ class YoutubeVideo(QWidget):
         self.options_group_layout.addWidget(self.captions_checkbox)
         self.options_group_layout.addWidget(self.audio_only_checkbox)
         self.options_group_layout.addWidget(self.thumbnail_url_checkbox)
+        self.options_group_layout.addSpacerItem(spacer_item_medium)
         self.options_layout.addWidget(self.options_group)
 
         self.main_layout.addSpacerItem(spacer_item_small)
@@ -198,7 +211,14 @@ class YoutubeVideo(QWidget):
         self.setLayout(self.main_layout)
         self.caption_list = None  # Define the caption_list attribute
 
-        # Other initialization code...
+    def update_audio_format(self):
+        audio_formats = ["MP3", "FLAC"]
+        if self.audio_only_checkbox.isChecked():
+            self.audio_format_select = ComboBox()
+            self.audio_format_select.addItems(audio_formats)
+            self.options_group_layout.addWidget(self.audio_format_select)
+        else:
+            self.audio_format_select.hide()
 
     def get_quality(self):
         url = self.link_entry.text()
@@ -269,19 +289,15 @@ class YoutubeVideo(QWidget):
         thread.start()
 
     def download(self):
-        def get_gif():
-            gifs = ["loading.gif", "loading_2.gif"]
-            gif = random.choice(gifs)
-            gif_path = "resources/misc/" + gif
-            return gif_path
-
         link = self.link_entry.text()
         quality = self.quality_menu.currentText()
         download_captions = self.captions_checkbox.isChecked()
         copy_thumbnail_link = self.thumbnail_url_checkbox.isChecked()
         mp3_only = ""
+        audio_format = "MP3"
         if self.audio_only_checkbox.isChecked():
             mp3_only = True
+            audio_format = self.audio_format_select.currentText()
         else:
             mp3_only = False
         title = ""
@@ -293,19 +309,27 @@ class YoutubeVideo(QWidget):
 
         # Open file dialog to get save path
         save_path, _ = QFileDialog.getSaveFileName(self, "Save file", title)
+        if not save_path:
+            return
+
+        # Extract filename from save_path
+        filename = os.path.basename(save_path)
+        filename_without_extension, _ = os.path.splitext(filename)
 
         self.downloader_thread = DownloaderThread(
             link=link,
             quality=quality,
             download_captions=download_captions,
             copy_thumbnail_link=copy_thumbnail_link,
-            save_path=save_path,  # Pass the save path here
+            save_path=os.path.dirname(save_path),  # Pass the directory path here
+            filename=filename_without_extension,  # Pass the filename without extension
             loading_label=self.loading_label,
             dwnld_list_widget=self.download_list_widget,
             quality_menu=self.quality_menu,
             main_window=self,
             caption_list=self.caption_list,
-            mp3_only=mp3_only
+            mp3_only=mp3_only,
+            audio_format=audio_format
         )
         self.downloader_thread.download_finished.connect(self.show_download_finished_message)
         self.downloader_thread.progress_update.connect(self.update_progress_bar)
