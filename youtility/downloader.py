@@ -79,17 +79,18 @@ class DownloaderThread(QThread):
             youtube_client.streams.filter(file_extension='mp4')  # Use your specific extension
             stream = youtube_client.streams.filter(only_audio=True).first()
             self.file_size = stream.filesize  # Set the file size
-            stream.download(output_path=self.save_path, filename=self.filename + ".mp4")
+            stream.download(output_path=self.save_path, filename=self.filename + ".mp3")
 
             # Conversion to FLAC using ffmpeg
             if self.audio_format == "FLAC":
-                input_file = os.path.join(self.save_path, self.filename + ".mp4").replace("\\", "/")
+                input_file = os.path.join(self.save_path, self.filename + ".mp3").replace("\\", "/")
                 output_file = os.path.join(self.save_path, self.filename + ".flac").replace("\\", "/")
 
                 # Run the ffmpeg command to convert mp4 to flac
                 ffmpeg_command = f'ffmpeg -i "{input_file}" "{output_file}"'
                 try:
                     subprocess.run(ffmpeg_command, shell=True, check=True)
+                    os.remove(input_file)
                 except subprocess.CalledProcessError as e:
                     print(f"Error during conversion: {e}")
                     self.list_item.setText((title + " - Download failed during conversion"))
